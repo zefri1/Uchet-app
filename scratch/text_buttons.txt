@@ -1,0 +1,53 @@
+billing.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2); width:100%; margin-top:10px;" | Content: Сохранить счет
+billing.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2); font-size: 16px; padding: 10px 24px;" | Content: Выполнить расчет начислений
+billing.html | BUTTON: type="submit" class="btn btn-secondary" style="font-size: 14px; padding: 10px 18px;" | Content: Сбросить ручные правки
+billing.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: #37474f; font-size: 16px; padding: 10px 24px;" | Content: Закрыть и заблокировать период
+billing.html | BUTTON: type="submit" class="btn btn-secondary" style="font-size: 14px; padding: 10px 18px;" | Content: Пересчитать
+billing.html | BUTTON: type="submit" class="btn btn-secondary" style="font-size: 14px; padding: 10px 18px;" | Content: Вернуть в черновик (Отменить расчёт)
+billing.html | BUTTON: type="submit" class="btn btn-secondary" style="font-size: 14px; padding: 10px 18px;" | Content: Открыть заново для редактирования
+billing.html | BUTTON: type="submit" class="btn btn-secondary btn-compact" style="height:28px; padding:0 8px; font-size:11px;" | Content: Правка
+billing.html | BUTTON: class="btn btn-secondary btn-compact" style="font-size:11px;" data-audit='{{ item.audit_payload }}' onclick="showAudit(this)" | Content: Формула
+billing.html | BUTTON: class="btn btn-primary btn-compact" style="background-color: #10b981; border: none; font-size: 12px; padding: 4px 10px;" onclick="openFastPayModal({{ tenant_id }}, '{{ t.display_name|escape }}', {{ bal.outgoing }})" | Content: Оплатить
+billing.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('fast-pay-dialog').close()" | Content: Отмена
+billing.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: #10b981; border: none;" | Content: Внести
+billing.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('create-period-dialog').close()" | Content: Отмена
+billing.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Создать период
+billing.html | A_BTN | Content: Общий реестр начислений (Excel)
+billing.html | A_BTN | Content: Скачать ВСЕ документы (ZIP)
+directory.html | BUTTON: class="tab-btn" onclick="switchTab('placements')" id="tab-btn-placements" | Content: Размещения
+directory.html | BUTTON: class="btn btn-secondary btn-compact" onclick="openEditObjectModal({{ item.id }}, '{{ item.name|escape }}', '{{ item.address|escape }}', {{ item.total_area }}, '{{ (item.note or '')|escape }}')" | Content: Изменить
+directory.html | BUTTON: class="btn btn-secondary btn-compact" onclick="openEditTenantModal({{ item.id }}, '{{ item.tenant_type }}', '{{ item.display_name|escape }}', '{{ (item.phone or '')|escape }}', '{{ (item.note or '')|escape }}', {{ item.initial_balance }})" | Content: Изменить
+directory.html | BUTTON: class="btn btn-secondary btn-compact" onclick="openEditPlacementModal({{ item.id }}, {{ item.object_id }}, {{ item.tenant_id }}, '{{ item.rental_address|escape }}', {{ item.occupied_area }}, {{ item.rent_tariff or 0.00 }}, '{{ item.start_date.isoformat() }}', '{% if item.end_date %}{{ item.end_date.isoformat() }}{% endif %}', '{{ item.status }}', '{{ (item.comment or '')|escape }}', {{ 'true' if item.is_active else 'false' }})" | Content: Изменить
+directory.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('add-object-dialog').close()" | Content: Отмена
+directory.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+directory.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('add-tenant-dialog').close()" | Content: Отмена
+directory.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+directory.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('add-placement-dialog').close()" | Content: Отмена
+directory.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+directory.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('edit-object-dialog').close()" | Content: Отмена
+directory.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+directory.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('edit-tenant-dialog').close()" | Content: Отмена
+directory.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+directory.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('edit-placement-dialog').close()" | Content: Отмена
+directory.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+payments.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить платеж
+payments.html | BUTTON: class="btn btn-secondary btn-compact" onclick="openEditPaymentModal({{ item.id }}, {{ item.tenant_id }}, {{ item.billing_period_id }}, {{ item.amount }}, '{{ item.payment_date }}', '{{ (item.comment or '')|escape }}')" | Content: Изменить
+payments.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('edit-payment-dialog').close()" | Content: Отмена
+payments.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить изменения
+settings.html | BUTTON: class="tab-btn" onclick="switchTab('tariffs')" id="tab-btn-tariffs" | Content: ️ Базовые тарифы
+settings.html | BUTTON: type="submit" class="btn btn-secondary" style="color: #ef4444; border-color: #ffe3e3; background: #fff5f5; width: 100%;" | Content: Загрузить и заменить базу
+settings.html | BUTTON: type="submit" class="btn btn-secondary btn-compact" | Content: Импорт объектов
+settings.html | BUTTON: type="submit" class="btn btn-secondary btn-compact" | Content: Импорт арендаторов
+settings.html | BUTTON: type="submit" class="btn btn-secondary" style="background:#fff5f5; color:#ef4444; border-color:#ffe3e3; width:100%;" | Content: ⏪ Откатить последний импорт
+settings.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить тариф
+settings.html | BUTTON: class="btn btn-secondary btn-compact" onclick="openEditTariffModal({{ item.id }}, {{ item.object_id }}, '{{ item.tenant_id or '' }}', '{{ item.utility_type }}', {{ item.value }}, '{{ item.unit_name or '' }}', '{{ item.start_date.isoformat() }}', '{% if item.end_date %}{{ item.end_date.isoformat() }}{% endif %}', {{ 'true' if item.is_active else 'false' }})" | Content: Изменить
+settings.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить правило
+settings.html | BUTTON: class="btn btn-secondary btn-compact" onclick="openEditRuleModal({{ item.id }}, {{ item.object_id }}, '{{ item.utility_type }}', '{{ item.mode }}', '{{ item.base_area_mode }}', '{{ item.tenant_id or '' }}', '{{ item.value_type or '' }}', {{ item.value or 0.00 }})" | Content: Изменить
+settings.html | BUTTON: type="submit" class="btn btn-secondary" style="background:#fff5f5; color:#ef4444; border-color:#ffe3e3;" | Content: Очистить корзину полностью
+settings.html | BUTTON: type="submit" class="btn btn-secondary btn-compact" style="background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32;" | Content: Восстановить
+settings.html | BUTTON: type="submit" class="btn btn-secondary btn-compact" style="background:#ffebee; border-color:#ffcdd2; color:#c62828;" | Content: Навсегда
+settings.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('edit-tariff-dialog').close()" | Content: Отмена
+settings.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+settings.html | BUTTON: type="button" class="btn btn-secondary" onclick="document.getElementById('edit-rule-dialog').close()" | Content: Отмена
+settings.html | BUTTON: type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);" | Content: Сохранить
+settings.html | A_BTN | Content: Скачать файл базы данных (app.db)

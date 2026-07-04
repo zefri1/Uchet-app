@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Формирование документов</p>
+        <h2>Счета, акты и реестр</h2>
+    </div>
+</section>
+{% if error %}
+<div class="form-error" style="margin: 0 2rem 1.5rem 2rem;">{{ error }}</div>
+{% endif %}
+
+<!-- ───── Верхняя сетка: форма + список документов ───── -->
+<section class="grid" style="grid-template-columns: 360px 1fr; gap: 2rem;">
+    <form class="card form-card" method="post" action="/documents/generate">
+        <h3>Сформировать документы</h3>
+        <label>Период
+            <select name="billing_period_id" id="main-period-select" required>
+                {% for item in periods %}<option value="{{ item.id }}">{{ item.month_label or (item.start_date ~ " - " ~ item.end_date) }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Арендатор
+            <select name="tenant_id">
+                <option value="">Выбрать арендатора</option>
+                {% for item in tenants %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Режим
+            <select name="scope">
+                <option value="single">Для одного арендатора</option>
+                <option value="all">Для всех арендаторов + реестр</option>
+            </select>
+        </label>
+        <button type="submit">Сформировать</button>
+    </form>
+
+    <div class="card table-card">
+        <h3>Сформированные документы</h3>
+        {% for item in grouped_periods %}
+            {% if item.registers or item.tenants %}
+                <div class="period-group" style="margin-bottom: 2rem; border-bottom: 1px solid var(--line); padding-bottom: 1.5rem;">
+                <h4 style="margin-bottom: 0.8rem; color: var(--ink); border-left: 4px solid var(--accent); padding-left: 8px; font-size: 15px; margin-top: 1rem; font-weight: 600;">
+                    Период: {{ item.period.month_label or (item.period.start_date ~ " - " ~ item.period.end_date) }}
+                </h4>
+
+                {% if item.registers or item.tenants %}
+                    <div style="margin-bottom: 1.2rem; background: #fbf9f6; border: 1px solid var(--line); padding: 16px; border-radius: 12px; border-left: 4px solid var(--accent); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong style="margin-right: 10px; color: var(--ink);">Общие реестры начислений:</strong>
+                            {% for reg in item.registers %}
+                                <a href="/documents/{{ reg.id }}/download" class="btn-download" style="margin-right: 15px; color: var(--accent); font-weight: 500; text-decoration: none;">
+                                    Скачать реестр (Excel) от {{ reg.created_at.strftime("%d.%m.%Y %H:%M") }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <a href="/documents/periods/{{ item.period.id }}/zip" class="btn btn-primary btn-compact">
+                                Скачать все документы (ZIP)
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if item.tenants %}
+                    <table style="width: 100%; margin-top: 0.5rem; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 600;">Арендатор</th>
+                                <th style="text-align: center; padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 600;">Реестр (Excel)</th>
+                                <th style="text-align: center; padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 600;">Счет (Word)</th>
+                                <th style="text-align: center; padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 600;">Счет (Excel)</th>
+                                <th style="text-align: center; padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 600;">Акт (Word)</th>
+                                <th style="text-align: center; padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 600;">Акт (Excel)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tenant_data in item.tenants %}
+                                <tr style="border-bottom: 1px solid var(--line);">
+                                    <td style="padding: 12px 10px; text-align: left;"><strong>{{ tenant_data.tenant_name }}</strong></td>
+                                    <td style="padding: 12px 10px; text-align: center;">
+                                        {% if tenant_data.register %}
+                                            <a href="/documents/{{ tenant_data.register.id }}/download" style="color: var(--accent); text-decoration: none; font-weight: 500;">Скачать XLSX</a>
+                                        {% else %}-{% endif %}
+                                    </td>
+                                    <td style="padding: 12px 10px; text-align: center;">
+                                        {% if tenant_data.invoice_docx %}
+                                            <a href="/documents/{{ tenant_data.invoice_docx.id }}/download" style="color: var(--accent); text-decoration: none; font-weight: 500;">Скачать DOCX</a>
+                                        {% else %}-{% endif %}
+                                    </td>
+                                    <td style="padding: 12px 10px; text-align: center;">
+                                        {% if tenant_data.invoice_xlsx %}
+                                            <a href="/documents/{{ tenant_data.invoice_xlsx.id }}/download" style="color: var(--accent); text-decoration: none; font-weight: 500;">Скачать XLSX</a>
+                                        {% else %}-{% endif %}
+                                    </td>
+                                    <td style="padding: 12px 10px; text-align: center;">
+                                        {% if tenant_data.act_docx %}
+                                            <a href="/documents/{{ tenant_data.act_docx.id }}/download" style="color: var(--accent); text-decoration: none; font-weight: 500;">Скачать DOCX</a>
+                                        {% else %}-{% endif %}
+                                    </td>
+                                    <td style="padding: 12px 10px; text-align: center;">
+                                        {% if tenant_data.act_xlsx %}
+                                            <a href="/documents/{{ tenant_data.act_xlsx.id }}/download" style="color: var(--accent); text-decoration: none; font-weight: 500;">Скачать XLSX</a>
+                                        {% else %}-{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p style="padding: 20px; text-align: center; color: var(--muted);">Документов пока нет. Выполните расчет и сформируйте документы.</p>
+    {% endfor %}
+    </div>
+</section>
+
+<!-- ───── Новый блок: выбор из начислений ───── -->
+<section style="margin: 1.5rem 0;">
+    <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <h3 class="section-title" style="margin: 0 0 4px 0;">Выбор по начислениям</h3>
+                <p style="margin: 0; color: var(--muted); font-size: 13px;">Отметьте нужных арендаторов галочками для формирования документов</p>
+            </div>
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                <span>Период:</span>
+                <select id="alloc-period-select" style="width: auto; min-width: 180px;">
+                    {% for item in periods %}
+                    <option value="{{ item.id }}">{{ item.month_label or (item.start_date ~ " - " ~ item.end_date) }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+
+        <!-- Состояния -->
+        <div id="alloc-hint" style="text-align: center; padding: 24px; color: var(--muted);">
+            ⏳ Загрузка начислений...
+        </div>
+        <div id="alloc-empty" style="display: none; padding: 16px; background: #fffcf5; border-radius: 10px; border: 1px solid #ffd59a; border-left: 4px solid orange; color: var(--ink);">
+            В этом периоде нет начислений. Сначала выполните расчёт на странице <a href="/billing" style="color: var(--accent);">Расчёт</a>.
+        </div>
+
+        <!-- Форма с таблицей -->
+        <form method="post" action="/documents/generate-selected" id="alloc-form" style="display: none;">
+            <input type="hidden" name="billing_period_id" id="alloc-period-id">
+
+            <table id="alloc-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center; padding: 12px 10px;">
+                            <input type="checkbox" id="alloc-check-all" title="Выбрать всех" class="checkbox-input" style="width:16px; height:16px; cursor:pointer;">
+                        </th>
+                        <th style="text-align: left; padding: 12px 10px;">Арендатор</th>
+                        <th style="text-align: left; padding: 12px 10px;">Начисления</th>
+                        <th style="text-align: right; padding: 12px 10px;">Итого, ₽</th>
+                    </tr>
+                </thead>
+                <tbody id="alloc-tbody"></tbody>
+            </table>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <button type="submit" id="alloc-submit-btn" class="btn btn-primary" disabled>
+                    Сформировать для выбранных
+                </button>
+                <button type="button" id="alloc-btn-select-all" class="btn btn-secondary btn-compact">
+                    Выбрать всех
+                </button>
+                <button type="button" id="alloc-btn-deselect" class="btn btn-secondary btn-compact">
+                    Снять всё
+                </button>
+                <span id="alloc-selected-count" style="color: var(--muted); font-size: 13px; margin-left: 4px;"></span>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+(function() {
+    const periodSel   = document.getElementById('alloc-period-select');
+    const hintEl      = document.getElementById('alloc-hint');
+    const emptyEl     = document.getElementById('alloc-empty');
+    const formEl      = document.getElementById('alloc-form');
+    const tbody       = document.getElementById('alloc-tbody');
+    const checkAll    = document.getElementById('alloc-check-all');
+    const submitBtn   = document.getElementById('alloc-submit-btn');
+    const countEl     = document.getElementById('alloc-selected-count');
+    const btnSelectAll = document.getElementById('alloc-btn-select-all');
+    const btnDeselect  = document.getElementById('alloc-btn-deselect');
+    const periodIdInp = document.getElementById('alloc-period-id');
+
+    function fmt(n) {
+        return new Intl.NumberFormat('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(n);
+    }
+
+    function updateSubmitState() {
+        const checked = tbody.querySelectorAll('input[type=checkbox]:checked').length;
+        const total   = tbody.querySelectorAll('input[type=checkbox]').length;
+        if (checked > 0) {
+            submitBtn.disabled = false;
+            countEl.textContent = `Выбрано: ${checked} из ${total}`;
+        } else {
+            submitBtn.disabled = true;
+            countEl.textContent = '';
+        }
+        checkAll.indeterminate = checked > 0 && checked < total;
+        checkAll.checked = checked === total && total > 0;
+    }
+
+    function renderTable(data) {
+        tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+            hintEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+            formEl.style.display  = 'none';
+            return;
+        }
+        emptyEl.style.display = 'none';
+        hintEl.style.display  = 'none';
+        formEl.style.display  = 'block';
+
+        data.forEach(function(row) {
+            const services = Object.entries(row.services)
+                .map(function([k, v]) { return `${k}: <b>${fmt(v)} ₽</b>`; })
+                .join(' &nbsp;·&nbsp; ');
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: center; width: 40px;">
+                    <input type="checkbox" name="tenant_ids" value="${row.tenant_id}" class="checkbox-input">
+                </td>
+                <td><strong>${row.tenant_name}</strong></td>
+                <td style="font-size: 13px; color: var(--muted);">${services}</td>
+                <td style="text-align: right; font-weight: 600; color: var(--accent);">
+                    ${fmt(row.total)} ₽
+                </td>
+            `;
+            tr.querySelector('input').addEventListener('change', updateSubmitState);
+            tbody.appendChild(tr);
+        });
+
+        updateSubmitState();
+    }
+
+    function loadAllocations(periodId) {
+        hintEl.textContent = '⏳ Загрузка начислений...';
+        hintEl.style.display = 'block';
+        emptyEl.style.display = 'none';
+        formEl.style.display  = 'none';
+        periodIdInp.value = periodId;
+
+        fetch('/api/periods/' + periodId + '/allocations')
+            .then(function(r) { return r.json(); })
+            .then(renderTable)
+            .catch(function() {
+                hintEl.textContent = '❌ Ошибка загрузки начислений.';
+            });
+    }
+
+    // Синхронизируем с верхним селектором периода
+    var mainPeriodSel = document.getElementById('main-period-select');
+    if (mainPeriodSel) {
+        mainPeriodSel.addEventListener('change', function() {
+            periodSel.value = this.value;
+            loadAllocations(this.value);
+        });
+    }
+
+    periodSel.addEventListener('change', function() {
+        if (mainPeriodSel) mainPeriodSel.value = this.value;
+        loadAllocations(this.value);
+    });
+
+    checkAll.addEventListener('change', function() {
+        tbody.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
+            cb.checked = checkAll.checked;
+        });
+        updateSubmitState();
+    });
+
+    btnSelectAll.addEventListener('click', function() {
+        tbody.querySelectorAll('input[type=checkbox]').forEach(function(cb) { cb.checked = true; });
+        checkAll.checked = true;
+        updateSubmitState();
+    });
+
+    btnDeselect.addEventListener('click', function() {
+        tbody.querySelectorAll('input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+        checkAll.checked = false;
+        updateSubmitState();
+    });
+
+    // Загружаем при открытии страницы
+    if (periodSel.value) {
+        loadAllocations(periodSel.value);
+    }
+})();
+</script>
+{% endblock %}

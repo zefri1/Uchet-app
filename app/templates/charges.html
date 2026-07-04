@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Ввод счетов и настройка правил</p>
+        <h2>Счета и распределение</h2>
+    </div>
+</section>
+<section class="grid two-forms">
+    <form class="card form-card" method="post" action="/charges">
+        <h3 class="section-title">Добавить счет</h3>
+        <label><span>Объект <span class="tooltip-info" data-tooltip="Объект недвижимости, для которого выставляется счет">?</span></span>
+            <select name="object_id" required>
+                {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Период <span class="tooltip-info" data-tooltip="Расчетный период, к которому относится этот расход">?</span></span>
+            <select name="billing_period_id" required>
+                {% for item in periods %}<option value="{{ item.id }}">{{ item.month_label or (item.start_date ~ " - " ~ item.end_date) }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Услуга <span class="tooltip-info" data-tooltip="Тип коммунальной услуги или аренды">?</span></span>
+            <select name="utility_type">
+                {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Ввод <span class="tooltip-info" data-tooltip="Способ ввода: итоговой суммой, по счетчику (потребление * тариф) или по тарифу за 1 кв.м площади">?</span></span>
+            <select name="input_mode">
+                <option value="amount">Итоговой суммой</option>
+                <option value="meter">По счетчику</option>
+                <option value="tariff">По тарифу за 1 м²</option>
+            </select>
+        </label>
+        <label><span>Распределение <span class="tooltip-info" data-tooltip="Метод распределения счета: по площади (пропорционально), вручную или смешанное">?</span></span>
+            <select name="allocation_mode">
+                <option value="area">По площади</option>
+                <option value="manual">Вручную</option>
+                <option value="mixed">Смешанное</option>
+            </select>
+        </label>
+        <label><span>Сумма <span class="tooltip-info" data-tooltip="Общая сумма счета к распределению (при вводе итоговой суммой)">?</span></span><input name="amount" type="number" step="0.01"></label>
+        <label><span>Показание от <span class="tooltip-info" data-tooltip="Начальное показание счетчика на начало расчетного периода">?</span></span><input name="meter_from" type="number" step="0.001"></label>
+        <label><span>Показание до <span class="tooltip-info" data-tooltip="Конечное показание счетчика на конец расчетного периода">?</span></span><input name="meter_to" type="number" step="0.001"></label>
+        <label><span>Тариф <span class="tooltip-info" data-tooltip="Тариф за единицу потребления счетчика или тариф за 1 кв.м">?</span></span><input name="tariff" type="number" step="0.0001"></label>
+        <label><span>Ед. изм. <span class="tooltip-info" data-tooltip="Единица измерения ресурса (кВтч, м3, руб/м2) для печатных документов">?</span></span><input name="unit_name"></label>
+        <label><span>Комментарий <span class="tooltip-info" data-tooltip="Описание или примечание к этому счету">?</span></span><textarea name="comment" rows="3"></textarea></label>
+        <button type="submit">Сохранить счет</button>
+    </form>
+    <form class="card form-card" method="post" action="/rules">
+        <h3 class="section-title">Добавить правило</h3>
+        <label><span>Объект <span class="tooltip-info" data-tooltip="Объект, к которому применяется это правило">?</span></span>
+            <select name="object_id" required>
+                {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Услуга <span class="tooltip-info" data-tooltip="Тип коммунальной услуги">?</span></span>
+            <select name="utility_type">
+                {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Режим <span class="tooltip-info" data-tooltip="Метод распределения доли (по площади, фиксированной суммой или процентом от счета)">?</span></span>
+            <select name="mode">
+                <option value="area">По площади</option>
+                <option value="manual">Ручной</option>
+                <option value="mixed">Смешанный</option>
+            </select>
+        </label>
+        <label><span>База площади <span class="tooltip-info" data-tooltip="Знаменатель при расчете площади: общая площадь здания (object_total) или сумма площадей активных договоров (active_leases)">?</span></span>
+            <select name="base_area_mode">
+                <option value="active_leases">Сумма активных площадей</option>
+                <option value="object_total">Общая площадь объекта</option>
+            </select>
+        </label>
+        <label><span>Арендатор <span class="tooltip-info" data-tooltip="Выберите конкретного арендатора для персонального правила, или оставьте пустым для всех">?</span></span>
+            <select name="tenant_id">
+                <option value="">Для всех арендаторов</option>
+                {% for item in tenants %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Тип значения <span class="tooltip-info" data-tooltip="Какое значение используется для ручной доли: фиксированная сумма или процент">?</span></span>
+            <select name="value_type">
+                <option value="">Без ручной доли</option>
+                <option value="percent">Процент</option>
+                <option value="fixed">Фиксированная сумма</option>
+            </select>
+        </label>
+        <label><span>Значение <span class="tooltip-info" data-tooltip="Размер доли (например, 15 для процентов или 5000 для фиксированной суммы)">?</span></span><input name="value" type="number" step="0.01"></label>
+        <button type="submit">Сохранить правило</button>
+    </form>
+</section>
+<section class="grid two-forms" style="margin-top: 2rem;">
+    <form class="card form-card" method="post" action="/tariffs">
+        <h3 class="section-title">Добавить тариф</h3>
+        <label><span>Объект <span class="tooltip-info" data-tooltip="Объект недвижимости, для которого действует тариф">?</span></span>
+            <select name="object_id" required>
+                {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Арендатор <span class="tooltip-info" data-tooltip="Арендатор для персонального тарифа, или оставьте пустым для общего тарифа объекта">?</span></span>
+            <select name="tenant_id">
+                <option value="">Для всех (общий тариф)</option>
+                {% for item in tenants %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Услуга <span class="tooltip-info" data-tooltip="Услуга (или Аренда), к которой привязан этот тариф">?</span></span>
+            <select name="utility_type">
+                <option value="rent">Аренда</option>
+                {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+        </label>
+        <label><span>Значение тарифа <span class="tooltip-info" data-tooltip="Значение тарифа в рублях (например, 800 для аренды за 1 кв.м)">?</span></span><input name="value" type="number" step="0.0001" required></label>
+        <label><span>Ед. изм. <span class="tooltip-info" data-tooltip="Единица измерения тарифа (руб./м2, руб./кВтч)">?</span></span><input name="unit_name" placeholder="руб./м2, руб./кВтч"></label>
+        <label><span>Дата начала действия <span class="tooltip-info" data-tooltip="Дата, с которой начинает применяться тариф">?</span></span><input name="start_date" type="date" required></label>
+        <label><span>Дата окончания действия <span class="tooltip-info" data-tooltip="Дата окончания действия тарифа (необязательно)">?</span></span><input name="end_date" type="date"></label>
+        <label class="checkbox"><input name="is_active" type="checkbox" checked>Активен</label>
+        <button type="submit">Сохранить тариф</button>
+    </form>
+</section>
+<div style="margin-top: 2rem;">
+    <div class="card table-card" style="margin-bottom: 2rem;">
+        <h3 class="section-title">Счета поставщиков</h3>
+        <table>
+            <thead><tr><th>Объект</th><th>Период</th><th>Услуга</th><th>Ввод</th><th>Распределение</th><th>Сумма</th><th>Действия</th></tr></thead>
+            <tbody>
+            {% for item in charges %}
+                <tr>
+                    <td>{{ item.object.name }}</td>
+                    <td>{{ item.billing_period.month_label or (item.billing_period.start_date ~ " - " ~ item.billing_period.end_date) }}</td>
+                    <td>{{ utility_labels[item.utility_type] }}</td>
+                    <td>{{ "Сумма" if item.input_mode == "amount" else "Счетчик" }}</td>
+                    <td>{{ allocation_mode_labels.get(item.allocation_mode, item.allocation_mode) }}</td>
+                    <td>{{ item.amount if item.amount is not none else "-" }}</td>
+                    <td class="actions">
+                        <button class="btn btn-secondary btn-compact" onclick="openEditChargeModal({{ item.id }}, {{ item.object_id }}, {{ item.billing_period_id }}, '{{ item.utility_type }}', '{{ item.input_mode }}', '{{ item.allocation_mode }}', '{{ item.amount or '' }}', '{{ item.meter_from or '' }}', '{{ item.meter_to or '' }}', '{{ item.tariff or '' }}', '{{ (item.unit_name or '')|escape }}', '{{ (item.comment or '')|escape }}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Изменить
+                        </button>
+                        <form method="post" action="/charges/{{ item.id }}/delete" onsubmit="return confirm('Вы уверены? Удаление счета приведет к перерасчету начислений.');">
+                            <button type="submit" class="btn-delete-icon" title="Удалить">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7">Счетов пока нет.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card table-card" style="margin-bottom: 2rem;">
+        <h3 class="section-title">Тарифы</h3>
+        <table>
+            <thead><tr><th>Объект</th><th>Арендатор</th><th>Услуга</th><th>Значение</th><th>Ед. изм.</th><th>Период действия</th><th>Статус</th><th>Действия</th></tr></thead>
+            <tbody>
+            {% for item in tariffs %}
+                <tr>
+                    <td>{{ item.object.name }}</td>
+                    <td>{{ item.tenant.display_name if item.tenant else "Все" }}</td>
+                    <td>{{ "Аренда" if item.utility_type == "rent" else utility_labels[item.utility_type] }}</td>
+                    <td>{{ item.value }}</td>
+                    <td>{{ item.unit_name or "-" }}</td>
+                    <td>{{ item.start_date }} - {{ item.end_date or "..." }}</td>
+                    <td>{{ "Да" if item.is_active else "Нет" }}</td>
+                    <td class="actions">
+                        <button class="btn btn-secondary btn-compact" onclick="openEditTariffModal({{ item.id }}, {{ item.object_id }}, '{{ item.tenant_id or '' }}', '{{ item.utility_type }}', '{{ item.value }}', '{{ (item.unit_name or '')|escape }}', '{{ item.start_date }}', '{{ item.end_date or '' }}', '{{ item.is_active }}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Изменить
+                        </button>
+                        <form method="post" action="/tariffs/{{ item.id }}/delete" onsubmit="return confirm('Вы уверены? Удаление тарифа приведет к перерасчету начислений.');">
+                            <button type="submit" class="btn-delete-icon" title="Удалить">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="8">Тарифов пока нет.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card table-card">
+        <h3 class="section-title">Правила распределения</h3>
+        <table>
+            <thead><tr><th>Объект</th><th>Услуга</th><th>Режим</th><th>Арендатор</th><th>Тип</th><th>Значение</th><th>Действия</th></tr></thead>
+            <tbody>
+            {% for item in rules %}
+                <tr>
+                    <td>{{ item.object.name }}</td>
+                    <td>{{ utility_labels[item.utility_type] }}</td>
+                    <td>{{ allocation_mode_labels.get(item.mode, item.mode) }}</td>
+                    <td>{{ item.tenant.display_name if item.tenant else "По умолчанию" }}</td>
+                    <td>{{ value_type_labels.get(item.value_type, "-") }}</td>
+                    <td>{{ item.value or "-" }}</td>
+                    <td class="actions">
+                        <button class="btn btn-secondary btn-compact" onclick="openEditRuleModal({{ item.id }}, {{ item.object_id }}, '{{ item.utility_type }}', '{{ item.mode }}', '{{ item.base_area_mode }}', '{{ item.tenant_id or '' }}', '{{ item.value_type or '' }}', '{{ item.value or '' }}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Изменить
+                        </button>
+                        <form method="post" action="/rules/{{ item.id }}/delete" onsubmit="return confirm('Вы уверены? Удаление правила приведет к перерасчету начислений.');">
+                            <button type="submit" class="btn-delete-icon" title="Удалить">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7">Правил пока нет.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<dialog id="edit-charge-dialog">
+    <div class="modal-header">
+        <h3>Редактировать счет</h3>
+        <button class="btn-close" onclick="document.getElementById('edit-charge-dialog').close()">×</button>
+    </div>
+    <form id="edit-charge-form" method="post" action="">
+        <label>Объект
+            <select id="edit-charge-object" name="object_id" required>
+                {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Период
+            <select id="edit-charge-period" name="billing_period_id" required>
+                {% for item in periods %}<option value="{{ item.id }}">{{ item.month_label or (item.start_date ~ " - " ~ item.end_date) }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Услуга
+            <select id="edit-charge-utility" name="utility_type">
+                {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Ввод
+            <select id="edit-charge-input-mode" name="input_mode">
+                <option value="amount">Итоговой суммой</option>
+                <option value="meter">По счетчику</option>
+                <option value="tariff">По тарифу за 1 м²</option>
+            </select>
+        </label>
+        <label>Распределение
+            <select id="edit-charge-allocation-mode" name="allocation_mode">
+                <option value="area">По площади</option>
+                <option value="manual">Вручную</option>
+                <option value="mixed">Смешанное</option>
+            </select>
+        </label>
+        <label>Сумма<input id="edit-charge-amount" name="amount" type="number" step="0.01"></label>
+        <label>Показание от<input id="edit-charge-meter-from" name="meter_from" type="number" step="0.001"></label>
+        <label>Показание до<input id="edit-charge-meter-to" name="meter_to" type="number" step="0.001"></label>
+        <label>Тариф<input id="edit-charge-tariff" name="tariff" type="number" step="0.0001"></label>
+        <label>Ед. изм.<input id="edit-charge-unit" name="unit_name"></label>
+        <label>Комментарий<textarea id="edit-charge-comment" name="comment" rows="3"></textarea></label>
+        <button type="submit">Сохранить изменения</button>
+    </form>
+</dialog>
+
+<dialog id="edit-rule-dialog">
+    <div class="modal-header">
+        <h3>Редактировать правило</h3>
+        <button class="btn-close" onclick="document.getElementById('edit-rule-dialog').close()">×</button>
+    </div>
+    <form id="edit-rule-form" method="post" action="">
+        <label>Объект
+            <select id="edit-rule-object" name="object_id" required>
+                {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Услуга
+            <select id="edit-rule-utility" name="utility_type">
+                {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Режим
+            <select id="edit-rule-mode" name="mode">
+                <option value="area">По площади</option>
+                <option value="manual">Ручной</option>
+                <option value="mixed">Смешанный</option>
+            </select>
+        </label>
+        <label>База площади
+            <select id="edit-rule-base-area" name="base_area_mode">
+                <option value="active_leases">Сумма активных площадей</option>
+                <option value="object_total">Общая площадь объекта</option>
+            </select>
+        </label>
+        <label>Арендатор
+            <select id="edit-rule-tenant" name="tenant_id">
+                <option value="">Для всех арендаторов</option>
+                {% for item in tenants %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Тип значения
+            <select id="edit-rule-value-type" name="value_type">
+                <option value="">Без ручной доли</option>
+                <option value="percent">Процент</option>
+                <option value="fixed">Фиксированная сумма</option>
+            </select>
+        </label>
+        <label>Значение<input id="edit-rule-value" name="value" type="number" step="0.01"></label>
+        <button type="submit">Сохранить изменения</button>
+    </form>
+</dialog>
+
+<dialog id="edit-tariff-dialog">
+    <div class="modal-header">
+        <h3>Редактировать тариф</h3>
+        <button class="btn-close" onclick="document.getElementById('edit-tariff-dialog').close()">×</button>
+    </div>
+    <form id="edit-tariff-form" method="post" action="">
+        <label>Объект
+            <select id="edit-tariff-object" name="object_id" required>
+                {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Арендатор
+            <select id="edit-tariff-tenant" name="tenant_id">
+                <option value="">Для всех (общий тариф)</option>
+                {% for item in tenants %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Услуга
+            <select id="edit-tariff-utility" name="utility_type">
+                <option value="rent">Аренда</option>
+                {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Значение тарифа<input id="edit-tariff-value" name="value" type="number" step="0.0001" required></label>
+        <label>Ед. изм.<input id="edit-tariff-unit" name="unit_name"></label>
+        <label>Дата начала действия<input id="edit-tariff-start" name="start_date" type="date" required></label>
+        <label>Дата окончания действия<input id="edit-tariff-end" name="end_date" type="date"></label>
+        <label class="checkbox"><input id="edit-tariff-active" name="is_active" type="checkbox">Активен</label>
+        <button type="submit">Сохранить изменения</button>
+    </form>
+</dialog>
+
+<script>
+function openEditTariffModal(id, objectId, tenantId, utilityType, value, unitName, startDate, endDate, isActive) {
+    const dialog = document.getElementById('edit-tariff-dialog');
+    const form = document.getElementById('edit-tariff-form');
+    form.action = '/tariffs/' + id + '/edit';
+    document.getElementById('edit-tariff-object').value = objectId;
+    document.getElementById('edit-tariff-tenant').value = tenantId || '';
+    document.getElementById('edit-tariff-utility').value = utilityType;
+    document.getElementById('edit-tariff-value').value = value;
+    document.getElementById('edit-tariff-unit').value = unitName || '';
+    document.getElementById('edit-tariff-start').value = startDate;
+    document.getElementById('edit-tariff-end').value = endDate || '';
+    document.getElementById('edit-tariff-active').checked = (isActive === 'True' || isActive === true);
+    dialog.showModal();
+}
+
+function openEditChargeModal(id, objectId, billingPeriodId, utilityType, inputMode, allocationMode, amount, meterFrom, meterTo, tariff, unitName, comment) {
+    const dialog = document.getElementById('edit-charge-dialog');
+    const form = document.getElementById('edit-charge-form');
+    form.action = '/charges/' + id + '/edit';
+    document.getElementById('edit-charge-object').value = objectId;
+    document.getElementById('edit-charge-period').value = billingPeriodId;
+    document.getElementById('edit-charge-utility').value = utilityType;
+    document.getElementById('edit-charge-input-mode').value = inputMode;
+    document.getElementById('edit-charge-allocation-mode').value = allocationMode;
+    document.getElementById('edit-charge-amount').value = amount || '';
+    document.getElementById('edit-charge-meter-from').value = meterFrom || '';
+    document.getElementById('edit-charge-meter-to').value = meterTo || '';
+    document.getElementById('edit-charge-tariff').value = tariff || '';
+    document.getElementById('edit-charge-unit').value = unitName || '';
+    document.getElementById('edit-charge-comment').value = comment || '';
+    dialog.showModal();
+}
+
+function openEditRuleModal(id, objectId, utilityType, mode, baseAreaMode, tenantId, valueType, value) {
+    const dialog = document.getElementById('edit-rule-dialog');
+    const form = document.getElementById('edit-rule-form');
+    form.action = '/rules/' + id + '/edit';
+    document.getElementById('edit-rule-object').value = objectId;
+    document.getElementById('edit-rule-utility').value = utilityType;
+    document.getElementById('edit-rule-mode').value = mode;
+    document.getElementById('edit-rule-base-area').value = baseAreaMode;
+    document.getElementById('edit-rule-tenant').value = tenantId || '';
+    document.getElementById('edit-rule-value-type').value = valueType || '';
+    document.getElementById('edit-rule-value').value = value || '';
+    dialog.showModal();
+}
+</script>
+{% endblock %}
+

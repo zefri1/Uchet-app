@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Справочник арендаторов</p>
+        <h2>Арендаторы</h2>
+    </div>
+</section>
+<section class="grid">
+    <form class="card form-card" method="post" action="/tenants">
+        <h3 class="section-title">Добавить арендатора</h3>
+        <label><span>Тип <span class="tooltip-info" data-tooltip="Юридический статус контрагента (ИП или ООО)">?</span></span>
+            <select name="tenant_type">
+                <option value="ИП">ИП</option>
+                <option value="ООО">ООО</option>
+            </select>
+        </label>
+        <label><span>ФИО / Наименование <span class="tooltip-info" data-tooltip="Официальное имя или наименование организации арендатора">?</span></span><input name="display_name" required></label>
+        <label><span>Телефон <span class="tooltip-info" data-tooltip="Контактный номер телефона для связи">?</span></span><input name="phone"></label>
+        <label><span>Начальный баланс, ₽ <span class="tooltip-info" data-tooltip="Начальный баланс при старте работы (положительный — долг арендатора, отрицательный — переплата)">?</span></span><input name="initial_balance" type="number" step="0.01" value="0.00"></label>
+        <label><span>Примечание <span class="tooltip-info" data-tooltip="Дополнительное примечание к этому арендатору">?</span></span><textarea name="note" rows="3"></textarea></label>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+    <div class="card table-card">
+        <h3 class="section-title">Список арендаторов</h3>
+        <table>
+            <thead><tr><th>Тип</th><th>Наименование</th><th>Телефон</th><th style="text-align: right;">Нач. баланс, ₽</th><th>Примечание</th><th>Действия</th></tr></thead>
+            <tbody>
+            {% for item in tenants %}
+                <tr>
+                    <td>{{ item.tenant_type }}</td>
+                    <td>{{ item.display_name }}</td>
+                    <td>{{ item.phone or "" }}</td>
+                    <td style="text-align: right; font-weight: 500;">{{ item.initial_balance }} ₽</td>
+                    <td>{{ item.note or "" }}</td>
+                    <td class="actions">
+                        <button class="btn btn-secondary btn-compact" onclick="openEditTenantModal({{ item.id }}, '{{ item.tenant_type }}', '{{ item.display_name|escape }}', '{{ (item.phone or '')|escape }}', '{{ (item.note or '')|escape }}', {{ item.initial_balance }})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Изменить
+                        </button>
+                        <form method="post" action="/tenants/{{ item.id }}/delete" onsubmit="return confirm('Вы уверены? Удаление арендатора также удалит все связанные с ним договора размещения, начисления и правила.');">
+                            <button type="submit" class="btn-delete-icon" title="Удалить">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5">Пока нет арендаторов.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<dialog id="edit-tenant-dialog">
+    <div class="modal-header">
+        <h3>Редактировать арендатора</h3>
+        <button class="btn-close" onclick="document.getElementById('edit-tenant-dialog').close()">×</button>
+    </div>
+    <form id="edit-tenant-form" method="post" action="">
+        <label>Тип
+            <select id="edit-tenant-type" name="tenant_type">
+                <option value="ИП">ИП</option>
+                <option value="ООО">ООО</option>
+            </select>
+        </label>
+        <label>ФИО / Наименование<input id="edit-tenant-name" name="display_name" required></label>
+        <label>Телефон<input id="edit-tenant-phone" name="phone"></label>
+        <label>Начальный баланс, ₽<input id="edit-tenant-initial-balance" name="initial_balance" type="number" step="0.01" required></label>
+        <label>Примечание<textarea id="edit-tenant-note" name="note" rows="3"></textarea></label>
+        <button type="submit">Сохранить изменения</button>
+    </form>
+</dialog>
+
+<script>
+function openEditTenantModal(id, type, name, phone, note, initialBalance) {
+    const dialog = document.getElementById('edit-tenant-dialog');
+    const form = document.getElementById('edit-tenant-form');
+    form.action = '/tenants/' + id + '/edit';
+    document.getElementById('edit-tenant-type').value = type;
+    document.getElementById('edit-tenant-name').value = name;
+    document.getElementById('edit-tenant-phone').value = phone;
+    document.getElementById('edit-tenant-initial-balance').value = initialBalance;
+    document.getElementById('edit-tenant-note').value = note;
+    dialog.showModal();
+}
+</script>
+{% endblock %}
+

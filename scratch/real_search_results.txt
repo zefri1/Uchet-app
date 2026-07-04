@@ -1,0 +1,7 @@
+TERM in billing.html:661 -> {% if doc_status.found %}Переформировать документы{% else %}Сформировать для всех арендаторов{% endif %}
+TERM in billing.html:751 -> <p style="margin: 0; font-size: 13px; color: #64748b;">Нажмите “Сформировать для всех арендаторов”, чтобы создать счета и акты.</p>
+TERM in guide.html:180 -> <strong><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #eab308; vertical-align: text-bottom; margin-right: 6px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Внимание к площадям:</strong> Ассистент на главной странице (Дашборд) сразу предупредит вас, если сумма площадей всех арендаторов превысит общую площадь самого здания. Внимательно проверяйте вводимые цифры!
+TERM in guide.html:273 -> <li>Нажмите кнопку <span class="kbd">Сформировать</span>.</li>
+EMOJI in settings.html:313: 📄 -> <a href="/settings/templates/objects" style="color:var(--accent-v2); text-decoration: none;">📄 Шаблон объектов</a>
+EMOJI in settings.html:314: 📄 -> <a href="/settings/templates/tenants" style="color:var(--accent-v2); text-decoration: none;">📄 Шаблон арендаторов</a>
+TERM in settings.html:753 -> <option value="">Для всех арендаторов</option>

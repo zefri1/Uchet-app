@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Справочник объектов</p>
+        <h2>Объекты недвижимости</h2>
+    </div>
+</section>
+<section class="grid">
+    <form class="card form-card" method="post" action="/objects">
+        <h3>Добавить объект</h3>
+        <label>Название<input name="name" required></label>
+        <label>Адрес<input name="address"></label>
+        <label>Общая площадь<input name="total_area" type="number" step="0.01" value="0.00"></label>
+        <label>Примечание<textarea name="note" rows="3"></textarea></label>
+        <button type="submit">Сохранить</button>
+    </form>
+    <div class="card table-card">
+        <h3>Список объектов</h3>
+        <table>
+            <thead><tr><th>Название</th><th>Адрес</th><th>Площадь</th><th>Примечание</th><th>Действия</th></tr></thead>
+            <tbody>
+            {% for item in objects %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.address }}</td>
+                    <td>{{ item.total_area }}</td>
+                    <td>{{ item.note or "" }}</td>
+                    <td class="actions">
+                        <button class="edit-btn" onclick="openEditObjectModal({{ item.id }}, '{{ item.name|escape }}', '{{ item.address|escape }}', {{ item.total_area }}, '{{ (item.note or '')|escape }}')">✏️ Изменить</button>
+                        <form method="post" action="/objects/{{ item.id }}/delete" style="margin: 0;" onsubmit="return confirm('Вы уверены? Удаление объекта также удалит связанные с ним договора размещения, счета и правила.');">
+                            <button type="submit" class="delete-btn-inline">❌</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5">Пока нет объектов.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<dialog id="edit-object-dialog">
+    <div class="modal-header">

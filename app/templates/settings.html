@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; max-width: 1000px; margin: 0 auto; padding-bottom: 40px; }
+    .settings-card { background: white; border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+    .settings-card h3 { margin-top: 0; font-size: 18px; color: var(--ink); margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .settings-card p { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+    .settings-card hr { border: none; border-top: 1px solid var(--line); margin: 20px 0; }
+    .template-links { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; margin-top: 16px; }
+    .template-links a { color: var(--accent); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .template-links a:hover { text-decoration: underline; }
+</style>
+
+<section class="hero" style="margin-bottom: 40px;">
+    <div>
+        <p class="eyebrow">Администрирование</p>
+        <h2>Настройки системы</h2>
+    </div>
+</section>
+
+{% if error %}
+<div class="form-error" style="margin: 0 auto 24px auto; max-width: 1000px;">{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="form-success" style="margin: 0 auto 24px auto; max-width: 1000px; background: #e6fcf5; color: #0ca678; padding: 12px 16px; border-radius: 8px; border: 1px solid #c3fae8; font-size: 14px;">{{ success }}</div>
+{% endif %}
+
+<div class="settings-grid">
+    <!-- Бэкап и восстановление -->
+    <div class="settings-card">
+        <h3>💾 Резервное копирование</h3>
+        <p>Создавайте резервные копии базы данных во избежание утери информации при переносе программы или обновлении системы.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <a href="/settings/backup" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none; gap: 8px;">
+                📥 Скачать резервную копию (app.db)
+            </a>
+            
+            <hr>
+            
+            <form method="post" action="/settings/restore" enctype="multipart/form-data" onsubmit="return confirm('Внимание! Восстановление базы данных полностью перепишет все текущие данные. Продолжить?');">
+                <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: var(--ink);">Восстановить базу из файла:</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="file" name="backup_file" accept=".db" required style="font-size: 13px;">
+                    <button type="submit" class="btn btn-secondary" style="background: #fff5f5; color: #ef4444; border-color: #ffe3e3;">
+                        📤 Загрузить и восстановить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Импорт данных из Excel -->
+    <div class="settings-card">
+        <h3>📊 Импорт данных из Excel</h3>
+        <p>Быстрое заполнение справочников при старте работы. Вы можете скачать демонстрационные шаблоны, заполнить их и загрузить обратно в систему.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Импорт объектов -->
+            <form method="post" action="/settings/import-objects" enctype="multipart/form-data">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--ink);">Импортировать объекты:</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" name="file" accept=".xlsx" required style="font-size: 13px; flex: 1;">
+                    <button type="submit" class="btn btn-secondary btn-compact">Импорт объектов</button>
+                </div>
+            </form>
+            
+            <!-- Импорт арендаторов -->
+            <form method="post" action="/settings/import-tenants" enctype="multipart/form-data">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--ink);">Импортировать арендаторов:</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" name="file" accept=".xlsx" required style="font-size: 13px; flex: 1;">
+                    <button type="submit" class="btn btn-secondary btn-compact">Импорт арендаторов</button>
+                </div>
+            </form>
+
+            <hr style="margin: 10px 0;">
+
+            <div class="template-links">
+                <strong>Скачать шаблоны таблиц:</strong>
+                <a href="/settings/templates/objects">Скачать шаблон объектов (Excel)</a>
+                <a href="/settings/templates/tenants">Скачать шаблон арендаторов (Excel)</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Справочник объектов</p>
+        <h2>Объекты недвижимости</h2>
+    </div>
+</section>
+<section class="grid">
+    <form class="card form-card" method="post" action="/objects">
+        <h3 class="section-title">Добавить объект</h3>
+        <label><span>Название <span class="tooltip-info" data-tooltip="Краткое наименование объекта недвижимости (например, БЦ Весна)">?</span></span><input name="name" required></label>
+        <label><span>Адрес <span class="tooltip-info" data-tooltip="Фактический адрес объекта">?</span></span><input name="address"></label>
+        <label><span>Общая площадь <span class="tooltip-info" data-tooltip="Общая площадь объекта недвижимости в кв.м">?</span></span><input name="total_area" type="number" step="0.01" value="0.00"></label>
+        <label><span>Примечание <span class="tooltip-info" data-tooltip="Дополнительное примечание к этому объекту">?</span></span><textarea name="note" rows="3"></textarea></label>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+    <div class="card table-card">
+        <h3 class="section-title">Список объектов</h3>
+        <table>
+            <thead><tr>
+                <th>Название</th>
+                <th>Адрес</th>
+                <th style="text-align:right;">Общая, м²</th>
+                <th style="text-align:right;">Занято, м²</th>
+                <th style="text-align:right;">Свободно, м²</th>
+                <th>Примечание</th>
+                <th>Действия</th>
+            </tr></thead>
+            <tbody>
+            {% for item in objects %}
+                {% set occupied = occupied_areas.get(item.id, 0) %}
+                {% set free = item.total_area - occupied %}
+                <tr>
+                    <td><strong>{{ item.name }}</strong></td>
+                    <td>{{ item.address }}</td>
+                    <td style="text-align:right;">{{ item.total_area }}</td>
+                    <td style="text-align:right;">
+                        <span style="color: {% if occupied > item.total_area %}var(--accent){% else %}var(--ink){% endif %}; font-weight: 600;">
+                            {{ occupied }}
+                        </span>
+                    </td>
+                    <td style="text-align:right;">
+                        <span style="color: {% if free < 0 %}var(--accent){% else %}var(--muted){% endif %};">
+                            {{ free }}
+                        </span>
+                    </td>
+                    <td>{{ item.note or "" }}</td>
+                    <td class="actions">
+                        <button class="btn btn-secondary btn-compact" onclick="openEditObjectModal({{ item.id }}, '{{ item.name|escape }}', '{{ item.address|escape }}', {{ item.total_area }}, '{{ (item.note or '')|escape }}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Изменить
+                        </button>
+                        <form method="post" action="/objects/{{ item.id }}/delete" onsubmit="return confirm('Вы уверены? Удаление объекта также удалит связанные с ним договора размещения, счета и правила.');">
+                            <button type="submit" class="btn-delete-icon" title="Удалить">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7">Пока нет объектов.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<dialog id="edit-object-dialog">
+    <div class="modal-header">
+        <h3>Редактировать объект</h3>
+        <button class="btn-close" onclick="document.getElementById('edit-object-dialog').close()">×</button>
+    </div>
+    <form id="edit-object-form" method="post" action="">
+        <label>Название<input id="edit-object-name" name="name" required></label>
+        <label>Адрес<input id="edit-object-address" name="address"></label>
+        <label>Общая площадь<input id="edit-object-area" name="total_area" type="number" step="0.01"></label>
+        <label>Примечание<textarea id="edit-object-note" name="note" rows="3"></textarea></label>
+        <button type="submit">Сохранить изменения</button>
+    </form>
+</dialog>
+
+<script>
+function openEditObjectModal(id, name, address, area, note) {
+    const dialog = document.getElementById('edit-object-dialog');
+    const form = document.getElementById('edit-object-form');
+    form.action = '/objects/' + id + '/edit';
+    document.getElementById('edit-object-name').value = name;
+    document.getElementById('edit-object-address').value = address;
+    document.getElementById('edit-object-area').value = area;
+    document.getElementById('edit-object-note').value = note;
+    dialog.showModal();
+}
+</script>
+{% endblock %}

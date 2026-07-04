@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет недвижимости</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/app_icon.png') }}?v=3">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <h1>УК Учет</h1>
+            <nav>
+                <a href="/dashboard">Главная</a>
+                <a href="/objects">Объекты</a>
+                <a href="/tenants">Арендаторы</a>
+                <a href="/placements">Размещение</a>
+                <a href="/charges">Счета и правила</a>
+                <a href="/billing">Расчет</a>
+                <a href="/payments">Оплаты</a>
+                <a href="/documents">Документы</a>
+                <a href="/guide">Руководство</a>
+                <a href="/trash">Корзина</a>
+                <a href="/settings">Настройки</a>
+                <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                    <a href="/v2/billing" style="background: #2b7a78; color: white !important; font-weight: bold; border-radius: 6px; text-align: center; display: block; border: none !important;">🚀 Новая версия (Beta)</a>
+                </div>
+            </nav>
+            <div class="stats">
+                <div><strong>{{ summary.objects }}</strong><span>объектов</span></div>
+                <div><strong>{{ summary.tenants }}</strong><span>арендаторов</span></div>
+                <div><strong>{{ summary.placements }}</strong><span>размещений</span></div>
+                <div><strong>{{ summary.periods }}</strong><span>периодов</span></div>
+            </div>
+        </aside>
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script>
+        document.querySelectorAll('.sidebar nav a').forEach(a => {
+            if (a.pathname === window.location.pathname) {
+                a.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор версии - УК Учет</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-v1: #64748b;
+            --accent-v2: #3b82f6;
+            --gradient-v2: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .logo-wrap {
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.4));
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.03em;
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 60px;
+            font-weight: 400;
+        }
+
+        .cards {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            align-items: stretch;
+            perspective: 1000px;
+        }
+
+        .card {
+            flex: 1;
+            max-width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-v1 {
+            animation-delay: 0.1s;
+        }
+
+        .card-v1:hover {
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 40px rgba(100, 116, 139, 0.2);
+        }
+
+        .card-v2 {
+            animation-delay: 0.2s;
+            background: rgba(30, 41, 59, 0.8);
+        }
+        
+        .card-v2::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .card-v2:hover::after {
+            opacity: 1;
+        }
+
+        .card-v2:hover {
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 60px rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .icon-wrap {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            font-size: 32px;
+            transition: transform 0.4s;
+        }
+
+        .card:hover .icon-wrap {
+            transform: scale(1.1);
+        }
+
+        .card-v1 .icon-wrap {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-muted);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+        }
+
+        .card-v2 .icon-wrap {
+            background: var(--gradient-v2);
+            color: white;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 32px;
+            flex-grow: 1;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.02em;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-v1 {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .card-v1:hover .btn-v1 {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .btn-v2 {
+            background: var(--text-main);
+            color: #0f172a;
+            border: none;
+            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+        }
+
+        .card-v2:hover .btn-v2 {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,255,255,0.2);
+        }
+        
+        .badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--gradient-v2);
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 100px;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+            animation: bounce 2s infinite;
+            z-index: 10;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .cards {
+                flex-direction: column;
+                align-items: center;
+            }
+            .card {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo-wrap">
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="url(#blue-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                    <linearGradient id="blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3b82f6" />
+                        <stop offset="100%" stop-color="#8b5cf6" />
+                    </linearGradient>
+                </defs>
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <h1>УК Учет</h1>
+            <p class="subtitle">Система управления коммерческой недвижимостью</p>
+        </div>
+
+        <div class="cards">
+            <!-- V1 -->
+            <a href="/dashboard" class="card card-v1">
+                <div class="icon-wrap">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                </div>
+                <h2>Классическая версия</h2>
+                <p>Привычный интерфейс со стандартными таблицами. Надежный и проверенный временем рабочий инструмент.</p>
+                <div class="btn btn-v1">Открыть V1</div>
+            </a>
+
+            <!-- V2 -->
+            <a href="/v2/billing" class="card card-v2">
+                <div class="badge">РЕКОМЕНДУЕТСЯ</div>
+                <div class="icon-wrap">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                </div>
+                <h2>Новая версия</h2>
+                <p>Современный аккуратный дизайн, улучшенная эргономика, всплывающие окна и высокая скорость работы.</p>
+                <div class="btn btn-v2">Открыть V2</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Декоративные частицы на фоне -->
+    <script>
+        const colors = ['rgba(59,130,246,0.1)', 'rgba(139,92,246,0.1)', 'rgba(255,255,255,0.05)'];
+        for(let i=0; i<15; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 100 + 50;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.top = Math.random() * 100 + 'vh';
+            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Анимация плавания
+            particle.animate([
+                { transform: `translate(0, 0)` },
+                { transform: `translate(${Math.random()*100 - 50}px, ${Math.random()*100 - 50}px)` },
+                { transform: `translate(0, 0)` }
+            ], {
+                duration: 10000 + Math.random() * 10000,
+                iterations: Infinity,
+                easing: 'ease-in-out'
+            });
+            
+            document.body.appendChild(particle);
+        }
+
+        // Анимация перехода при клике
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('href');
+                
+                // Создаем элемент круга для расширения
+                const circle = document.createElement('div');
+                circle.style.position = 'fixed';
+                circle.style.borderRadius = '50%';
+                circle.style.pointerEvents = 'none';
+                circle.style.zIndex = '9999';
+                circle.style.transition = 'all 0.6s cubic-bezier(0.645, 0.045, 0.355, 1)';
+                
+                // Получаем позицию клика
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX || rect.left + rect.width / 2;
+                const y = e.clientY || rect.top + rect.height / 2;
+                
+                circle.style.left = x + 'px';
+                circle.style.top = y + 'px';
+                circle.style.width = '0px';
+                circle.style.height = '0px';
+                
+                if (this.classList.contains('card-v2')) {
+                    circle.style.background = '#f4f7f6'; // светлый фон V2
+                    circle.style.boxShadow = '0 0 100px 50px rgba(244,247,246,0.8)';
+                } else {
+                    circle.style.background = '#f8f6f2'; // фон для V1
+                }
+                
+                document.body.appendChild(circle);
+                
+                // Анимируем расширение круга и затухание страницы
+                requestAnimationFrame(() => {
+                    circle.style.width = '300vw';
+                    circle.style.height = '300vw';
+                    circle.style.left = `calc(${x}px - 150vw)`;
+                    circle.style.top = `calc(${y}px - 150vw)`;
+                    document.body.style.opacity = '0';
+                    document.body.style.transition = 'opacity 0.6s ease-in';
+                });
+                
+                setTimeout(() => {
+                    window.location.href = target;
+                }, 550);
+            });
+        });
+    </script>
+</body>
+</html>

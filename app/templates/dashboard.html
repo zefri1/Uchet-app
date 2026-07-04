@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Панель управления</p>
+        <h2>Главная страница УК Учет</h2>
+    </div>
+</section>
+
+{% if success_msg %}
+<div style="margin: 0 0 1.5rem 0; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(46, 125, 50, 0.28); background: rgba(46, 125, 50, 0.08); color: #2e7d32; font-weight: bold;">
+    ✅ {{ success_msg }}
+</div>
+{% endif %}
+
+{% if error %}
+<div class="form-error" style="margin: 0 0 1.5rem 0;">⚠️ {{ error }}</div>
+{% endif %}
+
+{% if warnings %}
+<div class="card" style="margin: 0 0 1.5rem 0; border-left: 4px solid var(--accent); background: #fbf9f6; padding: 16px 20px;">
+    <h3 style="color: var(--ink); margin: 0 0 8px 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+        Ассистент проверок (предупреждений: {{ warnings|length }})
+    </h3>
+    <ul style="margin: 0; padding-left: 16px; color: var(--muted); line-height: 1.4; font-size: 13px;">
+        {% for warning in warnings %}
+            <li style="margin-bottom: 6px;">{{ warning }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="grid two-forms" style="margin-bottom: 2rem;">
+    <!-- Stat 1 -->
+    <div class="card" style="border-left: 4px solid var(--accent); padding: 20px; display: flex; flex-direction: column; justify-content: center; height: 120px;">
+        <h4 style="margin: 0; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Объекты в управлении</h4>
+        <div style="font-size: 32px; font-weight: 700; color: var(--ink); margin-top: 4px;">{{ objects_count }}</div>
+    </div>
+    <!-- Stat 2 -->
+    <div class="card" style="border-left: 4px solid var(--accent); padding: 20px; display: flex; flex-direction: column; justify-content: center; height: 120px;">
+        <h4 style="margin: 0; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Активные арендаторы</h4>
+        <div style="font-size: 32px; font-weight: 700; color: var(--ink); margin-top: 4px;">{{ tenants_count }}</div>
+    </div>
+</div>
+
+<div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <!-- Left: Wizard/Step-by-step checklist -->
+    <div class="card">
+        <h3 class="section-title" style="margin-bottom: 1.2rem;">Пошаговый план работы</h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0; margin-top: 2px;">1</div>
+                <div>
+                    <a href="/objects" style="color: var(--ink); font-weight: 600; text-decoration: none; font-size: 14px;">Создайте объекты</a>
+                    <span style="display: block; font-size: 13px; color: var(--muted); margin-top: 2px;">Внесите здания и площади для расчета коммунальных долей.</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0; margin-top: 2px;">2</div>
+                <div>
+                    <a href="/tenants" style="color: var(--ink); font-weight: 600; text-decoration: none; font-size: 14px;">Добавьте арендаторов</a>
+                    <span style="display: block; font-size: 13px; color: var(--muted); margin-top: 2px;">Заполните ФИО/Наименование и телефоны.</span>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0; margin-top: 2px;">3</div>
+                <div>
+                    <a href="/placements" style="color: var(--ink); font-weight: 600; text-decoration: none; font-size: 14px;">Заключите договора размещения</a>
+                    <span style="display: block; font-size: 13px; color: var(--muted); margin-top: 2px;">Укажите адрес аренды и занимаемую площадь.</span>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0; margin-top: 2px;">4</div>
+                <div>
+                    <a href="/charges" style="color: var(--ink); font-weight: 600; text-decoration: none; font-size: 14px;">Внесите счета от поставщиков</a>
+                    <span style="display: block; font-size: 13px; color: var(--muted); margin-top: 2px;">Теплоэнергия, водоснабжение, свет и уборка.</span>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0; margin-top: 2px;">5</div>
+                <div>
+                    <a href="/documents" style="color: var(--ink); font-weight: 600; text-decoration: none; font-size: 14px;">Сформируйте документы</a>
+                    <span style="display: block; font-size: 13px; color: var(--muted); margin-top: 2px;">Скачайте готовые счета, акты (Word/Excel) и реестры в один клик.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Current Period Financial Summary & Import -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <!-- Latest Period Summary -->
+        <div class="card">
+            <h3 class="section-title" style="margin-bottom: 1rem;">Последний расчетный период</h3>
+            {% if latest_period %}
+                <p style="margin: 0; font-size: 14px; color: var(--muted);">
+                    Отчетный период: <strong style="color: var(--ink);">{{ latest_period.month_label or (latest_period.start_date ~ " - " ~ latest_period.end_date) }}</strong>
+                </p>
+                <div style="margin-top: 12px; padding: 16px; background: #faf9f6; border-radius: 12px; border: 1px solid var(--line);">
+                    <span style="color: var(--muted); font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.02em;">Общая сумма начислений</span>
+                    <div style="font-size: 28px; font-weight: 700; color: var(--accent); margin-top: 4px;">{{ total_amount }} ₽</div>
+                </div>
+                <div style="margin-top: 14px; font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; align-items: center;">
+                    <span>Статус: <strong style="color: var(--ink); font-weight: 500;">{{ status_labels.get(latest_period.status, latest_period.status) }}</strong></span>
+                    <a href="/billing" style="color: var(--accent); font-weight: 600; text-decoration: none;">Все периоды →</a>
+                </div>
+            {% else %}
+                <p style="color: var(--muted);">Расчетных периодов в системе пока не создано.</p>
+                <div style="margin-top: 15px; padding: 15px; background: #fbf9f6; border-radius: 12px; border: 1px solid var(--line); border-left: 4px solid var(--accent);">
+                    <strong>Создайте период на вкладке <a href="/billing">«Расчет»</a>, чтобы начать калькуляцию начислений.</strong>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Excel Import Card -->
+        <div class="card" style="border-top: 2px solid var(--line);">
+            <h3 class="section-title" style="margin-bottom: 0.6rem;">Импорт из Excel</h3>
+            <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">Загрузите готовую таблицу с объектами и арендаторами для автоматического импорта базы данных.</p>
+            
+            <div style="margin-bottom: 16px;">
+                <a href="/import/template" class="btn btn-secondary btn-compact" style="text-decoration: none;">
+                    Скачать шаблон (.xlsx)
+                </a>
+            </div>
+
+            <form method="post" action="/import" enctype="multipart/form-data" style="gap: 14px;">
+                <label style="font-size: 13px;">
+                    Выбрать файл импорта (.xlsx)
+                    <input type="file" name="file" accept=".xlsx" required style="padding: 8px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; background: #ffffff;">
+                </label>
+                <button type="submit" class="btn btn-primary">Запустить импорт</button>
+            </form>
+
+            {% if has_backup %}
+            <form method="post" action="/import/rollback" style="margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 16px;" onsubmit="return confirm('Вы уверены, что хотите отменить последний импорт и полностью вернуть базу в состояние до загрузки файла?');">
+                <button type="submit" class="btn btn-danger">Отменить последний импорт</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

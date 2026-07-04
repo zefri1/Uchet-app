@@ -1,0 +1,825 @@
+{% extends "v2/base_v2.html" %}
+{% block content %}
+<style>
+    /* Tabs Header */
+    .tabs-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px !important;
+        border-bottom: none !important;
+        padding-bottom: 4px;
+    }
+    
+    /* Grid Layout */
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+        align-items: flex-start;
+    }
+    @media (max-width: 900px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Compact Form Styles */
+    .compact-form label {
+        font-size: 13px;
+        color: #475569;
+        margin: 0;
+        font-weight: 500;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .compact-form .label-header {
+        display: flex;
+        align-items: center;
+    }
+    .compact-form input[type="text"], 
+    .compact-form input[type="number"], 
+    .compact-form input[type="date"], 
+    .compact-form select, 
+    .compact-form textarea {
+        height: 32px;
+        padding: 4px 10px;
+        font-size: 13px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: inherit;
+        background: #fff;
+    }
+    .compact-form select {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    
+    .help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: bold;
+        cursor: help;
+        margin-left: 6px;
+        position: relative;
+    }
+    .help-icon:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 6px;
+        background: #1e293b;
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    /* Table Styles */
+    .table-responsive-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .settings-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        min-width: 700px;
+    }
+    .settings-table th {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 13px;
+        background: #f8fafc;
+    }
+    .settings-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 13px;
+    }
+    
+    .btn-delete-neutral {
+        background: #fff !important;
+        color: #94a3b8 !important;
+        border: 1px solid #e2e8f0 !important;
+        transition: all 0.2s;
+        padding: 4px 8px !important;
+        height: 26px !important;
+        border-radius: 6px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-delete-neutral:hover {
+        background: #ef4444 !important;
+        color: #fff !important;
+        border-color: #ef4444 !important;
+    }
+
+    .btn-danger-outline {
+        background: #fff5f5 !important;
+        color: #ef4444 !important;
+        border: 1px solid #ffe3e3 !important;
+        transition: all 0.2s;
+    }
+    .btn-danger-outline:hover {
+        background: #ef4444 !important;
+        color: #fff !important;
+        border-color: #ef4444 !important;
+    }
+    
+    .btn-success-outline {
+        background: #f0fdf4 !important;
+        color: #16a34a !important;
+        border: 1px solid #dcfce7 !important;
+        transition: all 0.2s;
+    }
+    .btn-success-outline:hover {
+        background: #16a34a !important;
+        color: #fff !important;
+        border-color: #16a34a !important;
+    }
+    
+    .compact-badge {
+        font-size: 11px;
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #475569;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    /* Modal Styles */
+    .compact-modal {
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 0;
+        max-height: 85vh;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .compact-modal[open] {
+        display: flex;
+        flex-direction: column;
+    }
+    .compact-modal::backdrop {
+        background: rgba(0, 0, 0, 0.4);
+    }
+    .compact-modal-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+        flex-shrink: 0;
+    }
+    .compact-modal-body {
+        padding: 20px 24px;
+        overflow-y: auto;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .compact-modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="wizard-step" style="padding: 20px 24px !important; margin-bottom: 20px;">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Администрирование</span>
+        <h2 class="step-title" style="color: #1e293b; margin: 0; font-size: 24px; font-weight: 700; line-height: 1.2;">Настройки и управление данными</h2>
+    </div>
+</div>
+
+{% if error %}
+<div class="wizard-step" style="border-left: 4px solid #ef4444; padding: 15px 20px; margin-bottom: 20px; background: #fee2e2; color: #991b1b;">
+    <strong>Ошибка:</strong> {{ error }}
+</div>
+{% endif %}
+{% if success %}
+<div class="wizard-step" style="border-left: 4px solid #10b981; padding: 15px 20px; margin-bottom: 20px; background: #d1fae5; color: #065f46;">
+    <strong>Успех:</strong> {{ success }}
+</div>
+{% endif %}
+
+<div class="tabs-header">
+    <button class="tab-btn" onclick="switchTab('system')" id="tab-btn-system"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Система и Импорт</button>
+    <button class="tab-btn" onclick="switchTab('tariffs')" id="tab-btn-tariffs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 6px;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Базовые тарифы</button>
+    <button class="tab-btn" onclick="switchTab('rules')" id="tab-btn-rules"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 6px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Правила распределения</button>
+    <button class="tab-btn" onclick="switchTab('trash')" id="tab-btn-trash"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 6px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Корзина</button>
+</div>
+
+<!-- ================== TAB 1: SYSTEM & IMPORT ================== -->
+<div id="tab-content-system" class="tab-content">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; align-items: flex-start;">
+        <!-- Backup -->
+        <div class="wizard-step" style="padding: 0; overflow: hidden;">
+            <div class="wizard-step-header" style="margin: 0; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <h3 class="section-title" style="margin: 0; font-size: 16px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Резервное копирование</h3>
+            </div>
+            <div style="padding: 20px;">
+                <p style="font-size:13px; color: #64748b; line-height:1.5; margin: 0 0 16px 0;">Создавайте резервные копии базы данных во избежание утери информации при переносе программы или обновлении системы.</p>
+                <a href="/settings/backup" class="btn btn-primary" style="display: block; text-align: center; text-decoration: none; background-color: var(--accent-v2); padding: 8px 16px; border-radius: 8px;">
+                     Скачать файл базы данных (app.db)
+                </a>
+                
+                <hr style="border:none; border-top:1px solid #e2e8f0; margin: 24px 0;">
+                
+                <form method="post" action="/settings/restore?redirect_to=/v2/settings" enctype="multipart/form-data" onsubmit="return confirm('Внимание! Восстановление базы данных полностью перезапишет текущую базу. Продолжить?');">
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #1e293b; font-weight: 600;">Восстановить базу из файла</h4>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <label class="btn btn-secondary btn-compact" style="cursor: pointer; background: #f8fafc; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                                Выбрать файл DB
+                                <input type="file" name="backup_file" accept=".db" required style="display: none;" onchange="document.getElementById('filename-db').textContent = this.files[0]?.name || 'Файл не выбран'">
+                            </label>
+                            <span id="filename-db" style="font-size: 13px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Файл не выбран</span>
+                        </div>
+                        <button type="submit" class="btn btn-danger-outline" style="width: 100%; padding: 8px 16px; border-radius: 8px;">
+                             Загрузить и заменить базу
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Excel Imports -->
+        <div class="wizard-step" style="padding: 0; overflow: hidden;">
+            <div class="wizard-step-header" style="margin: 0; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <h3 class="section-title" style="margin: 0; font-size: 16px;"> Импорт данных из Excel</h3>
+            </div>
+            <div style="padding: 20px;">
+                <p style="font-size:13px; color: #64748b; line-height:1.5; margin: 0 0 16px 0;">Быстрое заполнение справочников при старте работы. Скачайте шаблоны, заполните их и загрузите файлы обратно.</p>
+                
+                <form method="post" action="/settings/import-objects?redirect_to=/v2/settings" enctype="multipart/form-data" style="margin-bottom:20px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #1e293b; font-weight: 600;">Объекты недвижимости</h4>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <label class="btn btn-secondary btn-compact" style="cursor: pointer; background: #f8fafc; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                            Выбрать Excel
+                            <input type="file" name="file" accept=".xlsx" required style="display: none;" onchange="document.getElementById('filename-obj').textContent = this.files[0]?.name || 'Файл не выбран'">
+                        </label>
+                        <span id="filename-obj" style="font-size: 13px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Файл не выбран</span>
+                    </div>
+                    <button type="submit" class="btn btn-compact" style="width: 100%; background: #1e293b; color: white;">Импортировать объекты</button>
+                </form>
+                
+                <form method="post" action="/settings/import-tenants?redirect_to=/v2/settings" enctype="multipart/form-data" style="margin-bottom:20px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #1e293b; font-weight: 600;">Арендаторы</h4>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <label class="btn btn-secondary btn-compact" style="cursor: pointer; background: #f8fafc; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                            Выбрать Excel
+                            <input type="file" name="file" accept=".xlsx" required style="display: none;" onchange="document.getElementById('filename-ten').textContent = this.files[0]?.name || 'Файл не выбран'">
+                        </label>
+                        <span id="filename-ten" style="font-size: 13px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Файл не выбран</span>
+                    </div>
+                    <button type="submit" class="btn btn-compact" style="width: 100%; background: #1e293b; color: white;">Импортировать арендаторов</button>
+                </form>
+
+                {% if has_backup %}
+                <form method="post" action="/import/rollback?redirect_to=/v2/settings" onsubmit="return confirm('Вы действительно хотите откатить последний импорт? Все внесенные изменения в справочниках будут утеряны.');" style="margin-top: 10px;">
+                    <button type="submit" class="btn btn-danger-outline" style="width:100%; padding: 8px 16px; border-radius: 8px;">
+                        ⏪ Откатить последний импорт
+                    </button>
+                </form>
+                {% endif %}
+
+                <div style="background:#f1f5f9; padding:12px; border-radius:8px; margin-top:20px; font-size:13px; display: flex; flex-direction: column; gap: 6px;">
+                    <strong style="color: #1e293b;">Скачать пустые шаблоны Excel:</strong>
+                    <a href="/settings/templates/objects" style="color:var(--accent-v2); text-decoration: none;">📄 Шаблон объектов</a>
+                    <a href="/settings/templates/tenants" style="color:var(--accent-v2); text-decoration: none;">📄 Шаблон арендаторов</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================== TAB 2: TARIFFS ================== -->
+<div id="tab-content-tariffs" class="tab-content">
+    <div class="settings-grid">
+        <!-- Add Tariff Form -->
+        <div class="wizard-step" style="padding: 0; overflow: hidden;">
+            <div class="wizard-step-header" style="margin: 0; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <h3 class="section-title" style="margin: 0; font-size: 16px;">Создать тариф</h3>
+            </div>
+            <div style="padding: 20px;">
+                <form method="post" action="/tariffs?redirect_to=/v2/settings" class="compact-form" style="display: flex; flex-direction: column; gap: 12px; margin: 0;">
+                    <label>
+                        <div class="label-header">Объект</div>
+                        <select name="object_id" required>
+                            {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        <div class="label-header">Арендатор <span class="help-icon" data-tooltip="Для всех (Базовый) или персональный">?</span></div>
+                        <select name="tenant_id">
+                            <option value="">Для всех (Базовый)</option>
+                            {% for item in tenants %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        <div class="label-header">Тип услуги</div>
+                        <select name="utility_type">
+                            <option value="rent">Аренда (за 1 м²)</option>
+                            {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <label>
+                            <div class="label-header">Значение, ₽</div>
+                            <input name="value" type="number" step="0.0001" required>
+                        </label>
+                        <label>
+                            <div class="label-header">Ед. изм.</div>
+                            <input name="unit_name" type="text" placeholder="м2, кВтч">
+                        </label>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <label>
+                            <div class="label-header">Действует с</div>
+                            <input name="start_date" type="date" required>
+                        </label>
+                        <label>
+                            <div class="label-header">По (необяз.)</div>
+                            <input name="end_date" type="date">
+                        </label>
+                    </div>
+                    <label style="flex-direction: row; align-items: center; gap: 8px; margin-top: 4px;">
+                        <input type="checkbox" name="is_active" value="true" checked style="width: 16px; height: 16px;">
+                        <span>Тариф активен</span>
+                    </label>
+                    <div style="margin-top: 8px;">
+                        <button type="submit" class="btn btn-primary" style="background-color: var(--accent-v2); padding: 8px 16px; border-radius: 8px;">Сохранить тариф</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Tariffs List -->
+        <div class="wizard-step" style="padding: 0; overflow: hidden;">
+            <div class="wizard-step-header" style="margin: 0; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <h3 class="section-title" style="margin: 0; font-size: 16px;">Список действующих тарифов</h3>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="settings-table">
+                    <colgroup>
+                        <col style="width: 16%;">
+                        <col style="width: 18%;">
+                        <col style="width: 16%;">
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                        <col style="width: 10%;">
+                        <col style="width: 110px;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Объект</th>
+                            <th style="text-align: left;">Арендатор</th>
+                            <th style="text-align: left;">Услуга</th>
+                            <th style="text-align: right; white-space: nowrap;">Значение</th>
+                            <th style="text-align: center;">Срок действия</th>
+                            <th style="text-align: center;">Статус</th>
+                            <th style="text-align: center;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in tariffs %}
+                        <tr>
+                            <td style="color: #1e293b;">{{ item.object.name }}</td>
+                            <td>
+                                {% if item.tenant %}
+                                    {{ item.tenant.display_name }}
+                                {% else %}
+                                    <span class="compact-badge" style="background: #e0f2fe; color: #0284c7;">Базовый (Все)</span>
+                                {% endif %}
+                            </td>
+                            <td style="color: #475569;">{{ 'Аренда' if item.utility_type == 'rent' else utility_labels.get(item.utility_type, item.utility_type) }}</td>
+                            <td style="text-align:right; font-weight:600; color: #1e293b; white-space: nowrap;">
+                                {{ "{:,.2f}".format(item.value).replace(",", " ") }} ₽ 
+                                {% if item.unit_name %}<span style="font-size: 11px; color: #94a3b8; font-weight: 400;">/ {{ item.unit_name }}</span>{% endif %}
+                            </td>
+                            <td style="text-align: center; color: #64748b; font-size: 12px; white-space: nowrap;">
+                                {{ item.start_date.strftime('%d.%m.%y') }} - {% if item.end_date %}{{ item.end_date.strftime('%d.%m.%y') }}{% else %}∞{% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                {% if item.is_active %}
+                                    <span class="compact-badge" style="background: #dcfce7; color: #166534;">Активен</span>
+                                {% else %}
+                                    <span class="compact-badge">Архив</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <button class="btn btn-secondary btn-compact" style="background: #fff !important; padding: 4px 8px !important; height: 26px !important; border-color: #cbd5e1 !important;" onclick="openEditTariffModal({{ item.id }}, {{ item.object_id }}, '{{ item.tenant_id or '' }}', '{{ item.utility_type }}', {{ item.value }}, '{{ item.unit_name or '' }}', '{{ item.start_date.isoformat() }}', '{% if item.end_date %}{{ item.end_date.isoformat() }}{% endif %}', {{ 'true' if item.is_active else 'false' }})" title="Изменить">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </button>
+                                    <form method="post" action="/tariffs/{{ item.id }}/delete?redirect_to=/v2/settings" onsubmit="return confirm('Удалить данный тариф? Это может повлиять на расчет черновиков.');" style="margin: 0;">
+                                        <button type="submit" class="btn-delete-neutral" title="Удалить">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" style="text-align:center; color: #94a3b8; padding:30px;">Нет заведенных тарифов.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================== TAB 3: RULES ================== -->
+<div id="tab-content-rules" class="tab-content">
+    <div class="settings-grid">
+        <!-- Add Rule Form -->
+        <div class="wizard-step" style="padding: 0; overflow: hidden;">
+            <div class="wizard-step-header" style="margin: 0; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <h3 class="section-title" style="margin: 0; font-size: 16px;">Создать правило распределения</h3>
+            </div>
+            <div style="padding: 20px;">
+                <form method="post" action="/rules?redirect_to=/v2/settings" class="compact-form" style="display: flex; flex-direction: column; gap: 12px; margin: 0;">
+                    <label>
+                        <div class="label-header">Объект</div>
+                        <select name="object_id" required>
+                            {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        <div class="label-header">Услуга</div>
+                        <select name="utility_type">
+                            {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        <div class="label-header">Режим деления</div>
+                        <select name="mode">
+                            <option value="area">Пропорционально площади</option>
+                            <option value="manual">Вручную (заданные доли)</option>
+                            <option value="mixed">Смешанный</option>
+                        </select>
+                    </label>
+                    <label>
+                        <div class="label-header">База площади</div>
+                        <select name="base_area_mode">
+                            <option value="active_leases">Сумма активных (рекомендуется)</option>
+                            <option value="object_total">Общая проектная площадь</option>
+                        </select>
+                    </label>
+                    <label>
+                        <div class="label-header">Арендатор <span class="help-icon" data-tooltip="Оставьте пустым для правила по умолчанию">?</span></div>
+                        <select name="tenant_id">
+                            <option value="">Для всех (По умолчанию)</option>
+                            {% for item in tenants %}<option value="{{ item.id }}">{{ item.display_name }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <label>
+                            <div class="label-header">Тип ручной доли</div>
+                            <select name="value_type">
+                                <option value="">Без ручной</option>
+                                <option value="percent">Процент</option>
+                                <option value="fixed">Фикс. сумма</option>
+                            </select>
+                        </label>
+                        <label>
+                            <div class="label-header">Размер (доля)</div>
+                            <input name="value" type="number" step="0.01">
+                        </label>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <button type="submit" class="btn btn-primary" style="background-color: var(--accent-v2); padding: 8px 16px; border-radius: 8px;">Сохранить правило</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Rules List -->
+        <div class="wizard-step" style="padding: 0; overflow: hidden;">
+            <div class="wizard-step-header" style="margin: 0; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                <h3 class="section-title" style="margin: 0; font-size: 16px;">Текущие правила распределения счетов</h3>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="settings-table">
+                    <colgroup>
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                        <col style="width: 14%;">
+                        <col style="width: 22%;">
+                        <col style="width: 19%;">
+                        <col style="width: 10%;">
+                        <col style="width: 120px;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Объект</th>
+                            <th style="text-align: left;">Услуга</th>
+                            <th style="text-align: left;">Режим распред.</th>
+                            <th style="text-align: left; padding-right: 20px; min-width: 140px;">Базовая площадь</th>
+                            <th style="text-align: left; min-width: 120px;">Арендатор</th>
+                            <th style="text-align: right; white-space: nowrap;">Значение</th>
+                            <th style="text-align: center;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in rules %}
+                        <tr>
+                            <td style="color: #1e293b;">{{ item.object.name }}</td>
+                            <td style="color: #475569;">{{ utility_labels.get(item.utility_type, item.utility_type) }}</td>
+                            <td>
+                                {% if item.mode == 'area' %}<span class="compact-badge">По площади</span>
+                                {% elif item.mode == 'manual' %}<span class="compact-badge">Вручную</span>
+                                {% elif item.mode == 'mixed' %}<span class="compact-badge">Смешанный</span>
+                                {% else %}<span class="compact-badge">{{ item.mode }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding-right: 20px; min-width: 140px;">
+                                {% if item.base_area_mode == 'active_leases' %}<span class="compact-badge">Сумма активных</span>
+                                {% elif item.base_area_mode == 'object_total' %}<span class="compact-badge">Общая по объекту</span>
+                                {% else %}<span class="compact-badge">{{ item.base_area_mode }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.tenant %}
+                                    {{ item.tenant.display_name }}
+                                {% else %}
+                                    <span class="compact-badge" style="background: #e0f2fe; color: #0284c7;">Базовое (Все)</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right; font-weight: 500; color: #1e293b; white-space: nowrap;">
+                                {% if item.value_type == 'percent' %}{{ item.value }}%
+                                {% elif item.value_type == 'fixed' %}{{ item.value }} ₽
+                                {% else %}<span style="color: #cbd5e1; font-weight: 400;">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <button class="btn btn-secondary btn-compact" style="background: #fff !important; padding: 4px 8px !important; height: 26px !important; border-color: #cbd5e1 !important;" onclick="openEditRuleModal({{ item.id }}, {{ item.object_id }}, '{{ item.utility_type }}', '{{ item.mode }}', '{{ item.base_area_mode }}', '{{ item.tenant_id or '' }}', '{{ item.value_type or '' }}', {{ item.value or 0.00 }})" title="Изменить">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </button>
+                                    <form method="post" action="/rules/{{ item.id }}/delete?redirect_to=/v2/settings" onsubmit="return confirm('Удалить правило?');" style="margin: 0;">
+                                        <button type="submit" class="btn-delete-neutral" title="Удалить">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" style="text-align:center; color: #94a3b8; padding:30px;">Используются правила по умолчанию (пропорционально занимаемой площади).</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================== TAB 4: TRASH ================== -->
+<div id="tab-content-trash" class="tab-content">
+    <div class="wizard-step" style="padding: 0; overflow: hidden;">
+        <div class="wizard-step-header" style="margin: 0; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="section-title" style="margin:0; font-size: 16px;">Корзина удаленных записей</h3>
+            {% if trash_items %}
+            <form method="post" action="/trash/clear?redirect_to=/v2/settings" onsubmit="return confirm('Вы уверены, что хотите НАВСЕГДА очистить корзину? Это действие невозможно отменить!');" style="margin: 0;">
+                <button type="submit" class="btn btn-danger-outline" style="padding: 6px 12px; border-radius: 6px; font-size: 13px;"> Очистить корзину полностью</button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <div class="table-responsive-wrapper">
+            <table class="settings-table">
+                <colgroup>
+                    <col style="width: 20%;">
+                    <col style="width: 38%;">
+                    <col style="width: 20%;">
+                    <col style="width: 220px;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Тип записи</th>
+                        <th style="text-align: left;">Описание / Название</th>
+                        <th style="text-align: left;">Дата удаления</th>
+                        <th style="text-align: left; padding-left: 10px;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item in trash_items %}
+                    <tr>
+                        <td>
+                            <span class="compact-badge">
+                                {% if item.entity_type == 'property_object' %}Объект недвижимости
+                                {% elif item.entity_type == 'tenant' %}Арендатор
+                                {% elif item.entity_type == 'lease_placement' %}Договор размещения
+                                {% elif item.entity_type == 'tenant_payment' %}Платеж
+                                {% elif item.entity_type == 'utility_charge' %}Счет поставщика
+                                {% elif item.entity_type == 'tariff' %}Тариф
+                                {% elif item.entity_type == 'allocation_rule' %}Правило
+                                {% else %}{{ item.entity_type }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td style="color: #1e293b; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ item.display_name }}">
+                            {{ item.display_name }}
+                        </td>
+                        <td style="color: #64748b; white-space: nowrap;">{{ item.deleted_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td style="text-align: left; padding-left: 10px;">
+                            <div style="display: flex; gap: 6px; justify-content: flex-start;">
+                                <form method="post" action="/trash/{{ item.id }}/restore?redirect_to=/v2/settings" style="margin: 0;">
+                                    <button type="submit" class="btn btn-success-outline btn-compact" style="padding: 4px 8px !important; height: 26px !important; border-radius: 6px !important;" title="Восстановить">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: text-bottom;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Восстановить
+                                    </button>
+                                </form>
+                                <form method="post" action="/trash/{{ item.id }}/delete?redirect_to=/v2/settings" onsubmit="return confirm('Удалить запись безвозвратно?');" style="margin: 0;">
+                                    <button type="submit" class="btn btn-danger-outline btn-compact" style="padding: 4px 8px !important; height: 26px !important; border-radius: 6px !important;" title="Навсегда">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: text-bottom;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Навсегда
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4" style="text-align:center; color: #94a3b8; padding:40px;">Корзина пуста.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ================== EDIT MODALS ================== -->
+<dialog id="edit-tariff-dialog" class="compact-modal" style="width: 450px;">
+    <div class="compact-modal-header">
+        <h3 style="margin:0; font-size: 16px; color: #1e293b;">Редактировать базовый тариф</h3>
+    </div>
+    <div class="compact-modal-body">
+        <form id="edit-tariff-form" method="post" action="" class="compact-form" style="display: flex; flex-direction: column; gap: 12px; margin: 0;">
+            <label>Объект
+                <select id="edit-tariff-object" name="object_id" required>
+                    {% for obj in objects %}<option value="{{ obj.id }}">{{ obj.name }}</option>{% endfor %}
+                </select>
+            </label>
+            <label>Арендатор
+                <select id="edit-tariff-tenant" name="tenant_id">
+                    <option value="">Для всех (Базовый)</option>
+                    {% for t in tenants %}<option value="{{ t.id }}">{{ t.display_name }}</option>{% endfor %}
+                </select>
+            </label>
+            <label>Тип услуги
+                <select id="edit-tariff-utility" name="utility_type">
+                    <option value="rent">Аренда</option>
+                    {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+                </select>
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label>Значение, ₽<input id="edit-tariff-value" name="value" type="number" step="0.0001" required></label>
+                <label>Ед. изм.<input id="edit-tariff-unit" name="unit_name"></label>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label>Дата начала<input id="edit-tariff-start" name="start_date" type="date" required></label>
+                <label>Дата окончания<input id="edit-tariff-end" name="end_date" type="date"></label>
+            </div>
+            <label style="flex-direction: row; align-items: center; gap: 8px;">
+                <input type="checkbox" id="edit-tariff-active" name="is_active" value="true" style="width: 16px; height: 16px;">
+                <span>Тариф активен</span>
+            </label>
+        </form>
+    </div>
+    <div class="compact-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('edit-tariff-dialog').close()">Отмена</button>
+        <button type="submit" form="edit-tariff-form" class="btn btn-primary" style="background-color: var(--accent-v2);">Сохранить</button>
+    </div>
+</dialog>
+
+<dialog id="edit-rule-dialog" class="compact-modal" style="width: 450px;">
+    <div class="compact-modal-header">
+        <h3 style="margin:0; font-size: 16px; color: #1e293b;">Редактировать правило распределения</h3>
+    </div>
+    <div class="compact-modal-body">
+        <form id="edit-rule-form" method="post" action="" class="compact-form" style="display: flex; flex-direction: column; gap: 12px; margin: 0;">
+            <label>Объект
+                <select id="edit-rule-object" name="object_id" required>
+                    {% for obj in objects %}<option value="{{ obj.id }}">{{ obj.name }}</option>{% endfor %}
+                </select>
+            </label>
+            <label>Услуга
+                <select id="edit-rule-utility" name="utility_type">
+                    {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+                </select>
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label>Режим деления
+                    <select id="edit-rule-mode" name="mode">
+                        <option value="area">По площади</option>
+                        <option value="manual">Вручную</option>
+                        <option value="mixed">Смешанный</option>
+                    </select>
+                </label>
+                <label>База площади
+                    <select id="edit-rule-base" name="base_area_mode">
+                        <option value="active_leases">Актив. площади</option>
+                        <option value="object_total">Общая площадь</option>
+                    </select>
+                </label>
+            </div>
+            <label>Арендатор
+                <select id="edit-rule-tenant" name="tenant_id">
+                    <option value="">Для всех арендаторов</option>
+                    {% for t in tenants %}<option value="{{ t.id }}">{{ t.display_name }}</option>{% endfor %}
+                </select>
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label>Тип ручной доли
+                    <select id="edit-rule-valtype" name="value_type">
+                        <option value="">Без ручной</option>
+                        <option value="percent">Процент</option>
+                        <option value="fixed">Фикс. сумма</option>
+                    </select>
+                </label>
+                <label>Значение доли<input id="edit-rule-value" name="value" type="number" step="0.01"></label>
+            </div>
+        </form>
+    </div>
+    <div class="compact-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('edit-rule-dialog').close()">Отмена</button>
+        <button type="submit" form="edit-rule-form" class="btn btn-primary" style="background-color: var(--accent-v2);">Сохранить</button>
+    </div>
+</dialog>
+
+<!-- ================== SCRIPTS ================== -->
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById('tab-content-' + tabId).classList.add('active');
+        document.getElementById('tab-btn-' + tabId).classList.add('active');
+        
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabId);
+        window.history.replaceState({}, '', url);
+    }
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        let tab = urlParams.get('tab') || 'system';
+        if (!['system', 'tariffs', 'rules', 'trash'].includes(tab)) tab = 'system';
+        switchTab(tab);
+    });
+
+    function openEditTariffModal(id, objId, tenantId, utilType, value, unit, start, end, isActive) {
+        const dialog = document.getElementById('edit-tariff-dialog');
+        const form = document.getElementById('edit-tariff-form');
+        form.action = '/tariffs/' + id + '/edit?redirect_to=/v2/settings';
+        document.getElementById('edit-tariff-object').value = objId;
+        document.getElementById('edit-tariff-tenant').value = tenantId;
+        document.getElementById('edit-tariff-utility').value = utilType;
+        document.getElementById('edit-tariff-value').value = value;
+        document.getElementById('edit-tariff-unit').value = unit;
+        document.getElementById('edit-tariff-start').value = start;
+        document.getElementById('edit-tariff-end').value = end;
+        document.getElementById('edit-tariff-active').checked = isActive;
+        dialog.showModal();
+    }
+
+    function openEditRuleModal(id, objId, utilType, mode, base, tenantId, valtype, value) {
+        const dialog = document.getElementById('edit-rule-dialog');
+        const form = document.getElementById('edit-rule-form');
+        form.action = '/rules/' + id + '/edit?redirect_to=/v2/settings';
+        document.getElementById('edit-rule-object').value = objId;
+        document.getElementById('edit-rule-utility').value = utilType;
+        document.getElementById('edit-rule-mode').value = mode;
+        document.getElementById('edit-rule-base').value = base;
+        document.getElementById('edit-rule-tenant').value = tenantId;
+        document.getElementById('edit-rule-valtype').value = valtype;
+        document.getElementById('edit-rule-value').value = value;
+        dialog.showModal();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Связка объект ↔ арендатор</p>
+        <h2>Размещение арендаторов</h2>
+    </div>
+</section>
+<section class="grid">
+    <form class="card form-card" method="post" action="/placements">
+        <h3>Новое размещение</h3>
+        {% if error %}
+            <div class="form-error">{{ error }}</div>
+        {% endif %}
+        <label><span>Объект <span class="tooltip-info" data-tooltip="Объект недвижимости, в котором сдается помещение">?</span></span>
+            <select name="object_id" required>
+                {% for item in objects %}
+                    <option value="{{ item.id }}" {% if form_state.object_id == item.id %}selected{% endif %}>{{ item.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label><span>Арендатор <span class="tooltip-info" data-tooltip="Арендатор, заключающий договор аренды">?</span></span>
+            <select name="tenant_id" required>
+                {% for item in tenants %}
+                    <option value="{{ item.id }}" {% if form_state.tenant_id == item.id %}selected{% endif %}>{{ item.display_name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label><span>Адрес аренды <span class="tooltip-info" data-tooltip="Конкретный офис, помещение или секция (например, Офис 104, Склад №2)">?</span></span><input name="rental_address" value="{{ form_state.rental_address or '' }}" required></label>
+        <label><span>Занимаемая площадь <span class="tooltip-info" data-tooltip="Площадь помещения в кв.м (используется для расчетов аренды и коммунальных долей)">?</span></span><input name="occupied_area" type="number" step="0.01" value="{{ form_state.occupied_area or '' }}" required></label>
+        <label><span>Тариф аренды за 1 м² <span class="tooltip-info" data-tooltip="Стоимость аренды 1 кв.м площади в месяц. Если задан общий тариф, можно оставить пустым">?</span></span><input name="rent_tariff" type="number" step="0.01" value="{{ form_state.rent_tariff or '' }}"></label>
+        <label><span>Дата начала <span class="tooltip-info" data-tooltip="Дата начала действия аренды">?</span></span><input name="start_date" type="date" value="{{ form_state.start_date or '' }}" required></label>
+        <label><span>Дата окончания <span class="tooltip-info" data-tooltip="Дата окончания действия аренды (если известна)">?</span></span><input name="end_date" type="date" value="{{ form_state.end_date or '' }}"></label>
+        <label><span>Статус <span class="tooltip-info" data-tooltip="Статус договора размещения (активный, завершенный или планируемый в будущем)">?</span></span>
+            <select name="status">
+                <option value="active" {% if form_state.status == 'active' or form_state.status is not defined %}selected{% endif %}>Активно</option>
+                <option value="terminated" {% if form_state.status == 'terminated' %}selected{% endif %}>Завершено</option>
+                <option value="planned" {% if form_state.status == 'planned' %}selected{% endif %}>Запланировано</option>
+            </select>
+        </label>
+        <label><span>Комментарий <span class="tooltip-info" data-tooltip="Дополнительное примечание к этому размещению">?</span></span><textarea name="comment" rows="2">{{ form_state.comment or '' }}</textarea></label>
+        <label class="checkbox"><input name="is_active" type="checkbox" {% if form_state.is_active is not defined or form_state.is_active %}checked{% endif %}>Активно (системное) <span class="tooltip-info" data-tooltip="Глобальный признак активности записи в системе">?</span></label>
+        <button type="submit">Сохранить</button>
+    </form>
+    <div class="card table-card">
+        <h3 class="section-title">История размещений</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 90px;">Объект</th>
+                    <th style="width: 140px;">Арендатор</th>
+                    <th style="width: 140px;">Адрес</th>
+                    <th style="width: 110px;">Площадь</th>
+                    <th style="width: 110px;">Тариф</th>
+                    <th style="width: 220px;">Период</th>
+                    <th style="width: 120px;">Статус</th>
+                    <th style="width: 160px;">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in placements %}
+                <tr>
+                    <td>{{ item.object.name }}</td>
+                    <td><strong>{{ item.tenant.display_name }}</strong></td>
+                    <td>{{ item.rental_address }}</td>
+                    <td>{{ item.occupied_area }} м²</td>
+                    <td style="font-weight: 600;">{{ item.rent_tariff if item.rent_tariff is not none else "-" }}</td>
+                    <td style="white-space: nowrap;">{{ item.start_date.strftime('%d.%m.%Y') }} — {{ item.end_date.strftime('%d.%m.%Y') if item.end_date else '...' }}</td>
+                    <td>
+                        {% if item.status == 'active' %}<span class="badge badge-active">Активно</span>
+                        {% elif item.status == 'terminated' %}<span class="badge badge-terminated">Завершено</span>
+                        {% else %}<span class="badge badge-planned">Запланировано</span>{% endif %}
+                    </td>
+                    <td class="actions">
+                        <button class="btn btn-secondary btn-compact" onclick="openEditPlacementModal({{ item.id }}, {{ item.object_id }}, {{ item.tenant_id }}, '{{ item.rental_address|escape }}', {{ item.occupied_area }}, '{{ item.start_date }}', '{{ item.end_date or '' }}', '{{ item.is_active }}', '{{ item.rent_tariff or '' }}', '{{ item.status }}', '{{ (item.comment or '')|escape }}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Изменить
+                        </button>
+                        <form method="post" action="/placements/{{ item.id }}/delete" onsubmit="return confirm('Вы уверены? Удаление договора повлечет автоматический перерасчет текущих периодов.');">
+                            <button type="submit" class="btn-delete-icon" title="Удалить">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="8" style="text-align: center; color: var(--muted); padding: 24px;">Размещений пока нет.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<dialog id="edit-placement-dialog">
+    <div class="modal-header">
+        <h3>Редактировать размещение</h3>
+        <button class="btn-close" onclick="document.getElementById('edit-placement-dialog').close()">×</button>
+    </div>
+    <form id="edit-placement-form" method="post" action="">
+        <label>Объект
+            <select id="edit-placement-object" name="object_id" required>
+                {% for item in objects %}
+                    <option value="{{ item.id }}">{{ item.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Арендатор
+            <select id="edit-placement-tenant" name="tenant_id" required>
+                {% for item in tenants %}
+                    <option value="{{ item.id }}">{{ item.display_name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Адрес аренды<input id="edit-placement-address" name="rental_address" required></label>
+        <label>Занимаемая площадь<input id="edit-placement-area" name="occupied_area" type="number" step="0.01" required></label>
+        <label>Тариф аренды за 1 м²<input id="edit-placement-rent-tariff" name="rent_tariff" type="number" step="0.01"></label>
+        <label>Статус
+            <select id="edit-placement-status" name="status">
+                <option value="active">Активно</option>
+                <option value="terminated">Завершено</option>
+                <option value="planned">Запланировано</option>
+            </select>
+        </label>
+        <label>Комментарий<textarea id="edit-placement-comment" name="comment" rows="2"></textarea></label>
+        <label>Дата начала<input id="edit-placement-start" name="start_date" type="date" required></label>
+        <label>Дата окончания<input id="edit-placement-end" name="end_date" type="date"></label>
+        <label class="checkbox"><input id="edit-placement-active" name="is_active" type="checkbox">Активно (системное)</label>
+        <button type="submit">Сохранить изменения</button>
+    </form>
+</dialog>
+
+<script>
+function openEditPlacementModal(id, objectId, tenantId, address, area, start, end, active, rentTariff, status, comment) {
+    const dialog = document.getElementById('edit-placement-dialog');
+    const form = document.getElementById('edit-placement-form');
+    form.action = '/placements/' + id + '/edit';
+    document.getElementById('edit-placement-object').value = objectId;
+    document.getElementById('edit-placement-tenant').value = tenantId;
+    document.getElementById('edit-placement-address').value = address;
+    document.getElementById('edit-placement-area').value = area;
+    document.getElementById('edit-placement-start').value = start;
+    document.getElementById('edit-placement-end').value = end || '';
+    document.getElementById('edit-placement-active').checked = (active === 'True' || active === true);
+    document.getElementById('edit-placement-rent-tariff').value = rentTariff || '';
+    document.getElementById('edit-placement-status').value = status || 'active';
+    document.getElementById('edit-placement-comment').value = comment || '';
+    dialog.showModal();
+}
+</script>
+{% endblock %}
+

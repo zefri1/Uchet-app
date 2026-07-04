@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Финансовый учет</p>
+        <h2>Оплаты арендаторов</h2>
+    </div>
+</section>
+
+{% if error %}
+<div class="form-error" style="margin: 0 2rem 1.5rem 2rem;">{{ error }}</div>
+{% endif %}
+
+<section class="grid">
+    <!-- Form to add payment -->
+    <form class="card form-card" method="post" action="/payments">
+        <h3 class="section-title">Внести оплату</h3>
+        <label><span>Арендатор <span class="tooltip-info" data-tooltip="Выберите арендатора, совершившего платеж">?</span></span>
+            <select name="tenant_id" required>
+                {% for item in tenants %}
+                    <option value="{{ item.id }}" {% if form_state.tenant_id == item.id %}selected{% endif %}>{{ item.display_name }} ({{ item.tenant_type }})</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label><span>Период <span class="tooltip-info" data-tooltip="Расчетный месяц, к которому относится оплата">?</span></span>
+            <select name="billing_period_id" required>
+                {% for item in periods %}
+                    <option value="{{ item.id }}" {% if form_state.billing_period_id == item.id %}selected{% endif %}>{{ item.month_label or (item.start_date ~ " - " ~ item.end_date) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label><span>Сумма, ₽ <span class="tooltip-info" data-tooltip="Сумма внесенного платежа">?</span></span>
+            <input name="amount" type="number" step="0.01" value="{{ form_state.amount or '' }}" required>
+        </label>
+        <label><span>Дата оплаты <span class="tooltip-info" data-tooltip="Дата поступления средств">?</span></span>
+            <input name="payment_date" type="date" value="{{ form_state.payment_date or today }}" required>
+        </label>
+        <label><span>Комментарий <span class="tooltip-info" data-tooltip="Например: Номер платежного поручения">?</span></span>
+            <textarea name="comment" rows="2">{{ form_state.comment or '' }}</textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+
+    <!-- Table of payments -->
+    <div class="card table-card">
+        <h3 class="section-title">История оплат</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Арендатор</th>
+                    <th>Период</th>
+                    <th style="text-align: center;">Дата</th>
+                    <th style="text-align: right;">Сумма, ₽</th>
+                    <th>Комментарий</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in payments %}
+                <tr>
+                    <td><strong>{{ item.tenant.display_name }}</strong> <span class="badge" style="font-size:10px; opacity:0.7;">{{ item.tenant.tenant_type }}</span></td>
+                    <td>{{ item.billing_period.month_label or (item.billing_period.start_date ~ " - " ~ item.billing_period.end_date) }}</td>
+                    <td style="text-align: center;">{{ item.payment_date.strftime('%d.%m.%Y') }}</td>
+                    <td style="text-align: right; font-weight: 600; color: var(--accent);">{{ item.amount }} ₽</td>
+                    <td style="font-size: 13px; color: var(--muted);">{{ item.comment or "" }}</td>
+                    <td class="actions">
+                        <button class="btn btn-secondary btn-compact" onclick="openEditPaymentModal({{ item.id }}, {{ item.tenant_id }}, {{ item.billing_period_id }}, {{ item.amount }}, '{{ item.payment_date }}', '{{ (item.comment or '')|escape }}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Изменить
+                        </button>
+                        <form method="post" action="/payments/{{ item.id }}/delete" onsubmit="return confirm('Вы уверены, что хотите удалить эту запись об оплате?');">
+                            <button type="submit" class="btn-delete-icon" title="Удалить">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Оплат пока не зарегистрировано.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Edit Modal Dialog -->
+<dialog id="edit-payment-dialog" style="border-radius: 16px; border: 1px solid var(--line); padding: 0; min-width: 400px; max-width: 500px; box-shadow: 0 8px 40px rgba(0,0,0,0.15);">
+    <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Редактировать оплату</h3>
+        <button class="btn-close" onclick="document.getElementById('edit-payment-dialog').close()" style="background: transparent; border: none; font-size: 24px; color: var(--muted); cursor: pointer; padding: 4px; line-height: 1;">×</button>
+    </div>
+    <form id="edit-payment-form" method="post" action="" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <label>Арендатор
+            <select id="edit-payment-tenant" name="tenant_id" required>
+                {% for item in tenants %}
+                    <option value="{{ item.id }}">{{ item.display_name }} ({{ item.tenant_type }})</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Период
+            <select id="edit-payment-period" name="billing_period_id" required>
+                {% for item in periods %}
+                    <option value="{{ item.id }}">{{ item.month_label or (item.start_date ~ " - " ~ item.end_date) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Сумма, ₽<input id="edit-payment-amount" name="amount" type="number" step="0.01" required></label>
+        <label>Дата оплаты<input id="edit-payment-date" name="payment_date" type="date" required></label>
+        <label>Комментарий<textarea id="edit-payment-comment" name="comment" rows="2"></textarea></label>
+        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">Сохранить изменения</button>
+    </form>
+</dialog>
+
+<script>
+function openEditPaymentModal(id, tenantId, periodId, amount, dateStr, comment) {
+    const dialog = document.getElementById('edit-payment-dialog');
+    const form = document.getElementById('edit-payment-form');
+    form.action = '/payments/' + id + '/edit';
+    
+    document.getElementById('edit-payment-tenant').value = tenantId;
+    document.getElementById('edit-payment-period').value = periodId;
+    document.getElementById('edit-payment-amount').value = amount;
+    document.getElementById('edit-payment-date').value = dateStr;
+    document.getElementById('edit-payment-comment').value = comment;
+    
+    dialog.showModal();
+}
+</script>
+{% endblock %}

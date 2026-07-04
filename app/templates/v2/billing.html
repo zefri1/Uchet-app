@@ -1,0 +1,917 @@
+{% extends "v2/base_v2.html" %}
+{% block content %}
+<style>
+    /* Uniform margins and padding for steps */
+    .wizard-step {
+        padding: 24px !important;
+        margin-bottom: 24px !important;
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    /* Wizard step headers */
+    .wizard-step-header {
+        border-bottom: 1px solid #f1f5f9 !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Warning Outline button */
+    .btn-warning-outline {
+        background: transparent !important;
+        border: 1px solid #d97706 !important;
+        color: #d97706 !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 10px 18px;
+    }
+    .btn-warning-outline:hover {
+        background: #fef3c7 !important;
+        color: #b45309 !important;
+        border-color: #d97706 !important;
+    }
+
+    /* Outline button */
+    .btn-outline {
+        background: transparent !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #475569 !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 10px 18px;
+    }
+    .btn-outline:hover {
+        background: #f8fafc !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+    }
+
+    /* Table columns and cell alignments */
+    .table-card th {
+        font-size: 11px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #64748b !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        padding: 10px 12px !important;
+    }
+    .table-card td {
+        padding: 10px 12px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+    }
+    
+    /* Scrollable table container for Allocations */
+    .allocations-scroll-container {
+        max-height: 440px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        position: relative;
+    }
+    .allocations-scroll-container table {
+        margin-top: 0 !important;
+    }
+    .allocations-scroll-container thead th {
+        position: sticky;
+        top: 0;
+        background: #ffffff;
+        z-index: 10;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    }
+    /* Elegant thin scrollbar for allocations */
+    .allocations-scroll-container::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .allocations-scroll-container::-webkit-scrollbar-track {
+        background: #f8fafc;
+        border-radius: 4px;
+    }
+    .allocations-scroll-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    .allocations-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    /* Hover-trigger for formula buttons */
+    .allocation-row-item .formula-btn {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .allocation-row-item:hover .formula-btn {
+        opacity: 1;
+    }
+
+    /* Pay button style */
+    .btn-pay-compact, .table-card .btn-pay-compact {
+        background-color: #f0fdf4 !important;
+        background: #f0fdf4 !important;
+        color: #16a34a !important;
+        border: 1px solid #bbf7d0 !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease !important;
+        font-weight: 600 !important;
+    }
+    .btn-pay-compact:hover, .table-card .btn-pay-compact:hover {
+        background-color: #16a34a !important;
+        background: #16a34a !important;
+        color: #ffffff !important;
+        border-color: #16a34a !important;
+    }
+
+    /* Soft alert banners */
+    .alert-muted {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        font-size: 13px;
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Document link button elements */
+    .doc-dl-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 24px;
+        padding: 0 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: none;
+        color: #475569 !important;
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .doc-docx:hover {
+        background: #eff6ff !important;
+        color: #1d4ed8 !important;
+        border-color: #3b82f6 !important;
+    }
+    .doc-xlsx:hover {
+        background: #f0fdf4 !important;
+        color: #15803d !important;
+        border-color: #22c55e !important;
+    }
+    /* Tooltip positioned to the left (for right-aligned columns) */
+    .tooltip-left::after {
+        left: auto !important;
+        right: 0 !important;
+        transform: translateX(0) scale(0.9) !important;
+    }
+    .tooltip-left:hover::after {
+        transform: translateX(0) scale(1) !important;
+    }
+</style>
+
+<section class="hero" style="margin-bottom: 24px;">
+    <div>
+        <p class="eyebrow" style="color: #64748b; font-weight: 600;">Ежемесячный рабочий цикл</p>
+        <h2 style="color: #1e293b;">Расчет начислений и документы</h2>
+    </div>
+</section>
+
+{% if error %}
+<div class="card" style="border-left: 4px solid #ef4444; padding: 15px; margin-bottom: 20px; background: #fee2e2; color: #991b1b;">
+    <strong>Ошибка:</strong> {{ error }}
+</div>
+{% endif %}
+{% if success %}
+<div class="card" style="border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; background: #d1fae5; color: #065f46;">
+    <strong>Успех:</strong> {{ success }}
+</div>
+{% endif %}
+
+{% if warnings %}
+<div class="card" style="border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; background: #fef3c7; color: #78350f; box-shadow: none;">
+    <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; font-size: 15px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #eab308; flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Ассистент проверок (Обнаружены расхождения)</h4>
+    <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
+        {% for w in warnings %}
+            <li>{{ w }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- ================== STEP 1: SELECT OR CREATE MONTH ================== -->
+<div class="wizard-step" style="padding: 12px 20px !important;">
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="step-number"><span style="margin-left: 1px;">1</span></div>
+            <div class="step-title" style="color: #334155; margin: 0; font-size: 16px; line-height: 1;">Период:</div>
+            <select style="font-size: 14px; padding: 0 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 180px; height: 32px; background-color: #fff; cursor: pointer;" onchange="location.href='/v2/billing?period_id=' + this.value">
+                {% for item in periods %}
+                    <option value="{{ item.id }}" {% if selected_period and selected_period.id == item.id %}selected{% endif %}>
+                        {{ item.month_label or (item.start_date.strftime('%d.%m.%Y') ~ " - " ~ item.end_date.strftime('%d.%m.%Y')) }}
+                    </option>
+                {% else %}
+                    <option value="">-- Нет периодов --</option>
+                {% endfor %}
+            </select>
+            {% if selected_period %}
+            <span class="badge badge-{{ 'active' if selected_period.status == 'draft' else ('terminated' if selected_period.status == 'closed' else 'planned') }}" style="font-size: 12px; padding: 0 10px; height: 24px; display: inline-flex; align-items: center; margin: 0; line-height: 1;">
+                Статус: {{ 'Черновик (Открыт)' if selected_period.status == 'draft' else ('Закрыт (Блокирован)' if selected_period.status == 'closed' else 'Рассчитан') }}
+            </span>
+            {% endif %}
+        </div>
+        <div>
+            <button class="btn btn-secondary" onclick="document.getElementById('create-period-dialog').showModal()" style="height: 32px; padding: 0 16px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; margin: 0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Начать новый месяц
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if selected_period %}
+
+<!-- ================== STEP 2: SUPPLIER INVOICES (CHARGES) ================== -->
+<div class="wizard-step">
+    <div class="wizard-step-header">
+        <div class="step-number">2</div>
+        <div class="step-title" style="color: #334155;">Счета от поставщиков (Коммунальные расходы)</div>
+    </div>
+    
+    {% if selected_period.status == 'draft' %}
+    <div class="grid" style="grid-template-columns: 1fr 2fr; gap: 20px; align-items: start;">
+        <!-- Add Charge Form -->
+        <form class="card" method="post" action="/charges?redirect_to=/v2/billing" style="padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 0;">
+            <h4 style="margin-top:0; border-bottom:1px solid #f1f5f9; padding-bottom:8px; color: #1e293b; font-size: 15px; font-weight: 600;">Ввод нового счета</h4>
+            <input type="hidden" name="billing_period_id" value="{{ selected_period.id }}">
+            
+            <label><span>Объект</span>
+                <select name="object_id" required>
+                    {% for item in objects %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+                </select>
+            </label>
+            
+            <label><span>Тип услуги</span>
+                <select name="utility_type">
+                    {% for key, label in utility_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+                </select>
+            </label>
+            
+            <label><span>Способ ввода</span>
+                <select name="input_mode" id="charge-input-mode" onchange="toggleInputFields(this.value)">
+                    <option value="amount">Итоговой суммой</option>
+                    <option value="meter">По показаниям счетчика</option>
+                    <option value="tariff">По тарифу за 1 м²</option>
+                </select>
+            </label>
+            
+            <!-- Amount Input -->
+            <div id="field-amount">
+                <label><span>Сумма счета, ₽</span><input name="amount" type="number" step="0.01" placeholder="Введите рубли"></label>
+            </div>
+            
+            <!-- Meter Inputs -->
+            <div id="fields-meter" style="display:none; gap:10px;">
+                <label><span>Предыдущие</span><input name="meter_from" type="number" step="0.001" value="0.000"></label>
+                <label><span>Текущие</span><input name="meter_to" type="number" step="0.001" value="0.000"></label>
+            </div>
+            
+            <!-- Tariff Input -->
+            <div id="field-tariff" style="display:none;">
+                <label><span>Тариф</span><input name="tariff" type="number" step="0.0001" placeholder="Например: 6.20"></label>
+                <label><span>Ед. изм.</span><input name="unit_name" placeholder="кВтч, м³"></label>
+            </div>
+            
+            <button type="button" class="btn-toggle-adv" onclick="toggleAdvancedSettings()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 6px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Дополнительные параметры</button>
+            
+            <div class="advanced-settings" id="adv-settings-panel">
+                <label><span>Метод распределения</span>
+                    <select name="allocation_mode">
+                        <option value="area">По площади арендаторов</option>
+                        <option value="manual">Вручную (задать правила)</option>
+                        <option value="mixed">Смешанный</option>
+                    </select>
+                </label>
+                <label><span>Служебный комментарий</span><textarea name="comment" rows="2"></textarea></label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Сохранить счет</button>
+        </form>
+        
+        <!-- Charges Table -->
+        <div class="card table-card" style="padding: 20px; box-shadow: none; border: 1px solid #e2e8f0; margin: 0;">
+            <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 15px; font-weight: 600;">Счета за данный месяц</h4>
+            <table>
+                <thead><tr>
+                    <th style="width: 25%;">Объект</th>
+                    <th style="width: 20%;">Услуга</th>
+                    <th style="width: 30%;">Способ</th>
+                    <th style="text-align:right; width: 15%;">Сумма</th>
+                    <th style="text-align:center; width: 10%;">Действия</th>
+                </tr></thead>
+                <tbody>
+                {% for c in charges %}
+                    <tr>
+                        <td><strong>{{ c.object.name }}</strong></td>
+                        <td>{{ utility_labels.get(c.utility_type, c.utility_type) }}</td>
+                        <td>
+                            {% if c.input_mode == 'amount' %}
+                                Сумма
+                            {% elif c.input_mode == 'meter' %}
+                                Счетчик: {{ "{:,.3f}".format((c.meter_from or 0)|float).rstrip('0').rstrip('.') }} → {{ "{:,.3f}".format((c.meter_to or 0)|float).rstrip('0').rstrip('.') }}
+                            {% else %}
+                                Тариф: {{ "{:,.2f}".format((c.tariff or 0)|float).rstrip('0').rstrip('.') }} ₽/м²
+                            {% endif %}
+                        </td>
+                        <td style="text-align:right; font-weight: 600;">
+                            {{ "{:,.2f}".format(c.amount or 0.00).replace(",", " ") }} ₽
+                        </td>
+                        <td class="actions" style="text-align:center;">
+                            <form method="post" action="/charges/{{ c.id }}/delete?redirect_to=/v2/billing" onsubmit="return confirm('Удалить счет? Все расчеты сбросятся.');" style="display:inline-block; margin:0 auto;">
+                                <button type="submit" class="btn-delete-icon" style="padding:4px !important;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 20px;">Нет внесенных коммунальных счетов.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Period closed layout: Alert + Full Width table -->
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="alert-muted">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #64748b; flex-shrink: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Период закрыт. Редактирование счетов недоступно.</span>
+        </div>
+        
+        <div class="card table-card" style="padding: 20px; box-shadow: none; border: 1px solid #e2e8f0; margin: 0;">
+            <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 15px; font-weight: 600;">Счета за данный месяц</h4>
+            <table>
+                <thead><tr>
+                    <th style="width: 30%;">Объект</th>
+                    <th style="width: 30%;">Услуга</th>
+                    <th style="width: 25%;">Способ ввода</th>
+                    <th style="text-align:right; width: 15%;">Сумма</th>
+                </tr></thead>
+                <tbody>
+                {% for c in charges %}
+                    <tr>
+                        <td><strong>{{ c.object.name }}</strong></td>
+                        <td>{{ utility_labels.get(c.utility_type, c.utility_type) }}</td>
+                        <td>
+                            {% if c.input_mode == 'amount' %}
+                                Сумма
+                            {% elif c.input_mode == 'meter' %}
+                                Счетчик: {{ "{:,.3f}".format((c.meter_from or 0)|float).rstrip('0').rstrip('.') }} → {{ "{:,.3f}".format((c.meter_to or 0)|float).rstrip('0').rstrip('.') }}
+                            {% else %}
+                                Тариф: {{ "{:,.2f}".format((c.tariff or 0)|float).rstrip('0').rstrip('.') }} ₽/м²
+                            {% endif %}
+                        </td>
+                        <td style="text-align:right; font-weight: 600;">
+                            {{ "{:,.2f}".format(c.amount or 0.00).replace(",", " ") }} ₽
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--muted); padding: 20px;">Нет внесенных коммунальных счетов.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ================== STEP 3: CALCULATE ENGINE ================== -->
+<div class="wizard-step">
+    <div class="wizard-step-header">
+        <div class="step-number">3</div>
+        <div class="step-title" style="color: #334155;">Выполнение расчета</div>
+    </div>
+    
+    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+        {% if selected_period.status == 'draft' %}
+            <form method="post" action="/billing/{{ selected_period.id }}/calculate?redirect_to=/v2/billing" style="display:inline-block; margin: 0;">
+                <button type="submit" class="btn btn-primary" style="font-size: 15px; padding: 10px 24px; height: 42px;">Выполнить расчет начислений</button>
+            </form>
+            <form method="post" action="/billing/{{ selected_period.id }}/reset?redirect_to=/v2/billing" onsubmit="return confirm('Внимание! Все ваши ручные корректировки в этой таблице будут сброшены. Вы уверены?');" style="display:inline-block; margin: 0;">
+                <button type="submit" class="btn-outline" style="font-size: 14px; padding: 0 18px; height: 42px; border-radius: 10px; border: 1px solid #cbd5e1 !important; color: #475569 !important; background: transparent !important;">Сбросить ручные правки</button>
+            </form>
+        {% elif selected_period.status == 'calculated' %}
+            <form method="post" action="/billing/{{ selected_period.id }}/close?redirect_to=/v2/billing" style="display:inline-block; margin: 0;">
+                <button type="submit" class="btn btn-primary" style="font-size: 15px; padding: 10px 24px; height: 42px;">Закрыть и заблокировать период</button>
+            </form>
+            <form method="post" action="/billing/{{ selected_period.id }}/calculate?redirect_to=/v2/billing" style="display:inline-block; margin: 0;">
+                <button type="submit" class="btn-outline" style="font-size: 14px; padding: 0 18px; height: 42px; border-radius: 10px; border: 1px solid #cbd5e1 !important; color: #475569 !important; background: transparent !important;">Пересчитать</button>
+            </form>
+            <form method="post" action="/billing/{{ selected_period.id }}/reopen?redirect_to=/v2/billing" style="display:inline-block; margin: 0;">
+                <button type="submit" class="btn-warning-outline" style="font-size: 14px; padding: 0 18px; height: 42px; border-radius: 10px; border: 1px solid #d97706 !important; color: #d97706 !important; background: transparent !important;">Вернуть в черновик (Отменить расчёт)</button>
+            </form>
+        {% else %}
+            <form method="post" action="/billing/{{ selected_period.id }}/reopen?redirect_to=/v2/billing" style="display:inline-block; margin: 0;">
+                <button type="submit" class="btn-warning-outline" style="font-size: 14px; padding: 0 18px; height: 42px; border-radius: 10px; border: 1px solid #d97706 !important; color: #d97706 !important; background: transparent !important;">Открыть заново для редактирования</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <!-- Allocations Accordion (Collapsed by default, styled, grouped, sticky header) -->
+    {% if allocations %}
+    <details class="card" style="box-shadow: none; border: 1px solid #e2e8f0; padding: 0;" id="allocations-details-block">
+        <summary style="font-weight: 600; cursor: pointer; padding: 14px 20px; color: #475569; font-size: 14px; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #64748b;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Детализация начислений по арендаторам</span>
+            </div>
+            <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 11px; padding: 2px 8px !important; border-radius: 6px !important; font-weight: 500;">
+                {{ allocations|length }} строк
+            </span>
+        </summary>
+        <div style="padding: 20px; border-top: 1px solid #f1f5f9;">
+            <div class="allocations-scroll-container">
+                <table style="font-size: 13px; width: 100%; border-collapse: collapse;">
+                    <thead><tr>
+                        <th style="width: 20%; text-align: left;">Объект</th>
+                        <th style="width: 20%; text-align: left;">Помещение</th>
+                        <th style="width: 15%; text-align: left;">Услуга</th>
+                        <th style="width: 12%; text-align: right;">Площадь</th>
+                        <th style="width: 13%; text-align: right;">Начислено</th>
+                        <th style="width: 15%; text-align: left; padding-left: 20px;">Корректировка</th>
+                        <th style="width: 5%; text-align: center;">Детали</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for group in allocations|groupby('tenant.display_name') %}
+                        <!-- Tenant Group Header Row -->
+                        <tr style="background: #f1f5f9; font-weight: 600;">
+                            <td colspan="7" style="color: #1e293b; font-size: 13px; padding: 10px 16px; border-top: 1px solid #cbd5e1 !important; border-bottom: 1px solid #cbd5e1 !important; text-align: left;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" style="vertical-align: middle; margin-right: 6px; display: inline-block;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span style="vertical-align: middle;"><strong>Арендатор:</strong> {{ group.grouper }}</span>
+                            </td>
+                        </tr>
+                        {% for item in group.list %}
+                            <tr class="allocation-row-item">
+                                <td style="padding-left: 15px;">{{ item.object.name }}</td>
+                                <td><code>{{ item.placement.rental_address if item.placement else "—" }}</code></td>
+                                <td>{{ utility_labels.get(item.mode, "Аренда") }}</td>
+                                <td style="text-align:right;">{{ item.base_area }} м²</td>
+                                <td style="text-align:right; font-weight: 600;">
+                                    {{ "{:,.2f}".format(item.amount).replace(",", " ") }} ₽
+                                </td>
+                                <td style="padding-left: 20px;">
+                                    {% if selected_period.status == 'draft' %}
+                                    <form method="post" action="/billing/allocations/{{ item.id }}?redirect_to=/v2/billing" style="display:flex; gap:5px; align-items:center; margin: 0;">
+                                        <input name="amount" type="number" step="0.01" value="{{ item.amount }}" style="width:80px; height:24px; padding:2px 4px; font-size:11px; border-radius:4px; border:1px solid #cbd5e1;">
+                                        <button type="submit" class="btn btn-secondary btn-compact" style="height:24px !important; padding: 2px 6px !important; font-size: 10px !important;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Правка</button>
+                                    </form>
+                                    {% else %}
+                                    <span style="color:var(--muted); font-size:11px;">Корректировка закрыта</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: center;">
+                                    <button class="btn btn-secondary btn-compact formula-btn" data-audit='{{ item.audit_payload }}' onclick="showAudit(this)" style="padding: 2px 6px !important; height: 24px !important; min-height: 24px !important; font-size: 11px !important;" title="Показать формулу расчета">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        <span>Формула</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </details>
+    {% endif %}
+</div>
+
+<!-- ================== STEP 4: BALANCES & SALDO ================== -->
+{% if tenant_balances %}
+<!-- Calculate summary metrics in Jinja -->
+{% set total_allocated = namespace(value=0) %}
+{% set total_paid = namespace(value=0) %}
+{% set total_debt = namespace(value=0) %}
+{% set debtors_count = namespace(value=0) %}
+{% for tenant_id, bal in tenant_balances.items() %}
+    {% set total_allocated.value = total_allocated.value + bal.allocated %}
+    {% set total_paid.value = total_paid.value + bal.paid %}
+    {% if bal.outgoing > 0 %}
+        {% set total_debt.value = total_debt.value + bal.outgoing %}
+        {% set debtors_count.value = debtors_count.value + 1 %}
+    {% endif %}
+{% endfor %}
+
+<div class="wizard-step">
+    <div class="wizard-step-header">
+        <div class="step-number">4</div>
+        <div class="step-title" style="color: #334155;">Итоги по арендаторам и баланс (Сальдо)</div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 15px 20px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+            <span style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Начислено за месяц</span>
+            <strong style="font-size: 18px; color: #1e293b; font-weight: 700;">{{ "{:,.2f}".format(total_allocated.value).replace(",", " ") }} ₽</strong>
+        </div>
+        <div style="background: #fafdfb; border: 1px solid #dcfce7; padding: 15px 20px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+            <span style="font-size: 11px; color: #16a34a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Оплачено в периоде</span>
+            <strong style="font-size: 18px; color: #16a34a; font-weight: 700;">{{ "{:,.2f}".format(total_paid.value).replace(",", " ") }} ₽</strong>
+        </div>
+        <div style="background: #fffbfa; border: 1px solid #fee2e2; padding: 15px 20px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+            <span style="font-size: 11px; color: #be123c; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Общий долг</span>
+            <strong style="font-size: 18px; color: #be123c; font-weight: 700;">{{ "{:,.2f}".format(total_debt.value).replace(",", " ") }} ₽</strong>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 15px 20px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+            <span style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Должников</span>
+            <strong style="font-size: 18px; color: #475569; font-weight: 700;">
+                {% if debtors_count.value == 0 %}
+                    0 арендаторов
+                {% elif debtors_count.value % 10 == 1 and debtors_count.value % 100 != 11 %}
+                    {{ debtors_count.value }} арендатор
+                {% elif debtors_count.value % 10 in [2, 3, 4] and debtors_count.value % 100 not in [12, 13, 14] %}
+                    {{ debtors_count.value }} арендатора
+                {% else %}
+                    {{ debtors_count.value }} арендаторов
+                {% endif %}
+            </strong>
+        </div>
+    </div>
+    
+    <div class="card table-card" style="padding: 20px; box-shadow: none; border: 1px solid #e2e8f0; margin: 0; overflow: visible !important;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Арендатор</th>
+                    <th style="width: 18%; white-space: nowrap;">
+                        <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%; white-space: nowrap;">
+                            <span style="white-space: nowrap;">Входящее сальдо, ₽</span>
+                            <span class="tooltip-info" data-tooltip="Долг (> 0) или переплата (< 0) на начало текущего месяца">?</span>
+                        </div>
+                    </th>
+                    <th style="text-align: right; width: 17%; white-space: nowrap;">Начислено, ₽</th>
+                    <th style="text-align: right; width: 17%; white-space: nowrap;">Оплачено, ₽</th>
+                    <th style="width: 18%; white-space: nowrap;">
+                        <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%; white-space: nowrap;">
+                            <span style="white-space: nowrap;">Итоговое сальдо, ₽</span>
+                            <span class="tooltip-info tooltip-left" data-tooltip="Итоговый баланс с учетом всех начислений и оплат в этом месяце">?</span>
+                        </div>
+                    </th>
+                    <th style="text-align: center; width: 10%; white-space: nowrap;">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for tenant_id, bal in tenant_balances.items() %}
+                {% set t = tenant_objects[tenant_id] %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; white-space: nowrap;">
+                            <span style="font-weight: 600; color: #1e293b;">{{ t.display_name }}</span>
+                            <span class="badge" style="font-size: 10px; background: #f1f5f9; padding: 2px 6px !important; border-radius: 4px !important; font-weight: 500; color: #475569; white-space: nowrap; flex-shrink: 0; display: inline-flex !important; align-items: center; height: 18px !important; line-height: 18px !important; vertical-align: middle;">{{ t.tenant_type }}</span>
+                        </div>
+                    </td>
+                    <td style="text-align: right; color: {% if bal.incoming > 0 %}#dc2626{% elif bal.incoming < 0 %}#16a34a{% else %}#475569{% endif %}; font-weight: 400; font-size: 13px;">
+                        {{ "{:,.2f}".format(bal.incoming).replace(",", " ") }} ₽
+                    </td>
+                    <td style="text-align: right; font-weight: 500; color: #1e293b;">{{ "{:,.2f}".format(bal.allocated).replace(",", " ") }} ₽</td>
+                    <td style="text-align: right; font-weight: 500; color: #16a34a;">{{ "{:,.2f}".format(bal.paid).replace(",", " ") }} ₽</td>
+                    <td style="text-align: right; font-weight: 600; color: {% if bal.outgoing > 0 %}#be123c{% elif bal.outgoing < 0 %}#15803d{% else %}#0f172a{% endif %}; font-size: 14px;">
+                        {{ "{:,.2f}".format(bal.outgoing).replace(",", " ") }} ₽
+                    </td>
+                    <td style="text-align: center;">
+                        {% if bal.outgoing > 0 %}
+                            <button class="btn btn-pay-compact btn-compact" onclick="openFastPayModal({{ tenant_id }}, '{{ t.display_name|escape }}', {{ bal.outgoing }})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> Оплатить</button>
+                        {% else %}
+                            <span style="color: #94a3b8; font-size: 11px; font-weight: 500;">Нет долга</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<dialog id="fast-pay-dialog" style="border-radius: 12px; border: 1px solid #ccc; padding: 20px; width: 400px;">
+    <h3 style="margin-top:0; font-size: 16px; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px;">Внести оплату</h3>
+    <form method="post" action="/payments?redirect_to=/v2/billing">
+        <input type="hidden" name="tenant_id" id="fast-pay-tenant-id">
+        <input type="hidden" name="billing_period_id" value="{{ selected_period.id }}">
+        <p style="margin-top:0; margin-bottom: 15px; font-size: 13px; color: #475569;">Арендатор: <strong id="fast-pay-tenant-name" style="color: #1e293b;"></strong></p>
+        
+        <label>Сумма оплаты, ₽
+            <input type="number" step="0.01" name="amount" id="fast-pay-amount" required style="border: 1px solid #cbd5e1; border-radius: 8px;">
+        </label>
+        
+        <label>Дата оплаты
+            <input type="date" name="payment_date" id="fast-pay-date" required style="border: 1px solid #cbd5e1; border-radius: 8px;">
+        </label>
+        
+        <label>Комментарий
+            <textarea name="comment" rows="2" style="border: 1px solid #cbd5e1; border-radius: 8px;"></textarea>
+        </label>
+        
+        <label style="flex-direction: row; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: #475569;">
+            <input type="checkbox" name="is_active" value="true" checked style="width:16px; height:16px; margin: 0;">
+            <span>Активная оплата</span>
+        </label>
+        
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('fast-pay-dialog').close()" style="height:36px; padding:0 14px; font-size: 13px;">Отмена</button>
+            <button type="submit" class="btn btn-primary" style="background-color: #16a34a !important; height:36px; padding:0 14px; font-size: 13px;">Внести</button>
+        </div>
+    </form>
+</dialog>
+{% endif %}
+
+<!-- ================== STEP 5: DOCUMENTS GENERATION ================== -->
+<div class="wizard-step" id="step-5">
+    <div class="wizard-step-header">
+        <div class="step-number">5</div>
+        <div class="step-title" style="color: #334155;">Выпуск счетов и актов для арендаторов</div>
+    </div>
+    
+    <!-- Combined Document Panel -->
+    <div class="card table-card" style="padding: 20px; box-shadow: none; border: 1px solid #e2e8f0; margin: 0;">
+        {% set doc_status = namespace(found=false) %}
+        {% for p_data in grouped_periods %}
+            {% if p_data.period.id == selected_period.id %}
+                {% if p_data.tenants %}
+                    {% set doc_status.found = true %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 600;">Выпущенные документы за расчетный период</h4>
+            
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <form method="post" action="/documents/generate?redirect_to=/v2/billing%23step-5" style="display: inline-block; margin: 0;">
+                    <input type="hidden" name="billing_period_id" value="{{ selected_period.id }}">
+                    <input type="hidden" name="scope" value="all">
+                    <button type="submit" class="btn" style="font-size: 12px; padding: 0 14px; height: 32px; background-color: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; box-shadow: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; cursor: pointer; border-radius: 6px; line-height: 1;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #1d4ed8;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        {% if doc_status.found %}Переформировать документы{% else %}Сформировать для всех арендаторов{% endif %}
+                    </button>
+                </form>
+                
+                {% for p_data in grouped_periods %}
+                    {% if p_data.period.id == selected_period.id %}
+                        {% if p_data.registers %}
+                            {% for reg in p_data.registers %}
+                                <a href="/documents/{{ reg.id }}/download" class="btn btn-secondary" style="font-size: 12px; padding: 0 14px; height: 32px; display: inline-flex; align-items: center; line-height: 30px; border-radius: 6px; margin: 0; font-weight: 500; box-shadow: none;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; color: #475569;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                    Реестр (Excel)
+                                </a>
+                            {% endfor %}
+                            <a href="/documents/periods/{{ selected_period.id }}/zip" class="btn btn-secondary" style="font-size: 12px; padding: 0 14px; height: 32px; background-color: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; color: #16a34a !important; display: inline-flex; align-items: center; line-height: 30px; border-radius: 6px; margin: 0; font-weight: 500; box-shadow: none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; color: #16a34a;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Скачать все (ZIP)
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% if doc_status.found %}
+        <!-- Individual Document Matrix -->
+        <table style="font-size: 13px; width: 100%; border-collapse: collapse;">
+            <thead><tr>
+                <th style="text-align: left; width: 32%;">Арендатор</th>
+                <th style="text-align:center; width: 17%;">Счет (Word)</th>
+                <th style="text-align:center; width: 17%;">Счет (Excel)</th>
+                <th style="text-align:center; width: 17%;">Акт (Word)</th>
+                <th style="text-align:center; width: 17%;">Акт (Excel)</th>
+            </tr></thead>
+            <tbody>
+            {% for p_data in grouped_periods %}
+                {% if p_data.period.id == selected_period.id %}
+                    {% for docs in p_data.tenants %}
+                        <tr>
+                            <td style="white-space: nowrap;"><strong>{{ docs.tenant_name }}</strong></td>
+                            <td style="text-align:center;">
+                                {% if docs.invoice_docx %}
+                                    <a href="/documents/{{ docs.invoice_docx.id }}/download" class="doc-dl-link doc-docx">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                        <span>DOCX</span>
+                                    </a>
+                                {% else %}
+                                    <span style="color:#cbd5e1;">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;">
+                                {% if docs.invoice_xlsx %}
+                                    <a href="/documents/{{ docs.invoice_xlsx.id }}/download" class="doc-dl-link doc-xlsx">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                        <span>Excel</span>
+                                    </a>
+                                {% else %}
+                                    <span style="color:#cbd5e1;">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;">
+                                {% if docs.act_docx %}
+                                    <a href="/documents/{{ docs.act_docx.id }}/download" class="doc-dl-link doc-docx">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                        <span>DOCX</span>
+                                    </a>
+                                {% else %}
+                                    <span style="color:#cbd5e1;">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;">
+                                {% if docs.act_xlsx %}
+                                    <a href="/documents/{{ docs.act_xlsx.id }}/download" class="doc-dl-link doc-xlsx">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                        <span>Excel</span>
+                                    </a>
+                                {% else %}
+                                    <span style="color:#cbd5e1;">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center; padding: 40px 20px; color: #64748b;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #94a3b8;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                <h5 style="margin: 0; font-size: 15px; font-weight: 600; color: #475569;">Документы ещё не сформированы</h5>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">Нажмите “Сформировать для всех арендаторов”, чтобы создать счета и акты.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ================== DIALOGS ================== -->
+<dialog id="create-period-dialog" style="border-radius: 12px; border: 1px solid #ccc; padding: 20px; width: 400px;">
+    <h3 style="margin-top:0;">Начать новый расчетный месяц</h3>
+    <form method="post" action="/billing/periods?redirect_to=/v2/billing">
+        <input type="hidden" name="period_type" value="month">
+        
+        <label><span>Ярлык месяца (ГГГГ-ММ)</span>
+            <input name="month_label" type="text" placeholder="Например: 2026-07" required id="new-period-label">
+        </label>
+        
+        <label><span>Дата начала</span>
+            <input name="start_date" type="date" required id="new-period-start">
+        </label>
+        
+        <label><span>Дата окончания</span>
+            <input name="end_date" type="date" required id="new-period-end">
+        </label>
+        
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px;">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('create-period-dialog').close()">Отмена</button>
+            <button type="submit" class="btn btn-primary" style="background-color: var(--accent-v2);">Создать период</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="audit-dialog" style="border-radius: 16px; border: 1px solid #ccc; padding: 0; min-width: 440px; max-width: 600px; box-shadow: 0 8px 40px rgba(0,0,0,0.15);">
+    <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fdfdfd;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #17252a;">Расшифровка начисления</h3>
+        <button onclick="document.getElementById('audit-dialog').close()" style="background: transparent; border: none; font-size: 24px; color: #888; cursor: pointer; line-height: 1;">×</button>
+    </div>
+    <div id="audit-content" style="padding: 20px 24px; font-size: 14px; line-height: 1.7; max-height:400px; overflow-y:auto;"></div>
+</dialog>
+
+<!-- ================== SCRIPTS ================== -->
+<script>
+    function toggleInputFields(mode) {
+        document.getElementById('field-amount').style.display = (mode === 'amount') ? 'block' : 'none';
+        document.getElementById('fields-meter').style.display = (mode === 'meter') ? 'flex' : 'none';
+        document.getElementById('field-tariff').style.display = (mode === 'tariff' || mode === 'meter') ? 'block' : 'none';
+    }
+    
+    function toggleAdvancedSettings() {
+        const panel = document.getElementById('adv-settings-panel');
+        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Auto calculate dates for new month when opening new period dialog
+    document.getElementById('create-period-dialog').addEventListener('close', () => {});
+    
+    // We can auto-fill new period fields on dialog open
+    const dialogBtn = document.querySelector('button[onclick*="create-period-dialog"]');
+    if (dialogBtn) {
+        dialogBtn.addEventListener('click', () => {
+            const today = new Date();
+            let nextMonth = today.getMonth() + 1;
+            let year = today.getFullYear();
+            if (nextMonth > 11) {
+                nextMonth = 0;
+                year += 1;
+            }
+            
+            // Format labels
+            const monthStr = String(nextMonth + 1).padStart(2, '0');
+            document.getElementById('new-period-label').value = `${year}-${monthStr}`;
+            
+            // First day and last day of next month
+            const firstDay = new Date(year, nextMonth, 1);
+            const lastDay = new Date(year, nextMonth + 1, 0);
+            
+            document.getElementById('new-period-start').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('new-period-end').value = lastDay.toISOString().split('T')[0];
+        });
+    }
+
+    // Form audit payload view
+    function showAudit(btn) {
+        try {
+            const payload = JSON.parse(btn.getAttribute('data-audit'));
+            
+            let html = '<div style="font-family: monospace; background:#f4f7f6; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #ddd;">';
+            if (payload.formula) {
+                html += `<strong>Формула:</strong> ${payload.formula}<br>`;
+            }
+            if (payload.description) {
+                html += `<strong>Описание:</strong> ${payload.description}<br>`;
+            }
+            html += '</div>';
+
+            const KEY_LABELS = {
+                'charge_amount': 'Сумма к распределению (счет)',
+                'calculated_at': 'Дата расчета',
+                'base_area_mode': 'Режим распределения площади',
+                'occupied_area': 'Занимаемая площадь',
+                'active_days': 'Дней активности в периоде',
+                'days_in_period': 'Дней в периоде',
+                'coefficient': 'Коэффициент времени',
+                'weight': 'Вес (доля)',
+                'denominator': 'Общий знаменатель',
+                'share_pct': 'Процент участия',
+                'tariff_details': 'Детализация по дням (Тарифы)'
+            };
+
+            html += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
+            for (const [key, value] of Object.entries(payload)) {
+                if (key === 'formula' || key === 'description') continue;
+                
+                let displayKey = KEY_LABELS[key] || key;
+                let displayVal = value;
+                
+                if (value === 'active_leases') displayVal = 'Активные размещения';
+                if (value === 'object_total') displayVal = 'Общая площадь объекта';
+                
+                if (typeof value === 'number') {
+                    displayVal = value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                } else if (Array.isArray(value)) {
+                    displayVal = '<ul style="margin:0; padding-left:15px;">';
+                    const ITEM_KEYS = { 'start': 'Начало', 'end': 'Конец', 'days': 'Дней', 'tariff': 'Тариф', 'amount': 'Сумма' };
+                    value.forEach(item => {
+                        if (typeof item === 'object') {
+                            displayVal += '<li style="margin-bottom:4px;">' + Object.entries(item).map(([k,v]) => `<b>${ITEM_KEYS[k] || k}</b>: ${v}`).join(', ') + '</li>';
+                        } else {
+                            displayVal += `<li>${item}</li>`;
+                        }
+                    });
+                    displayVal += '</ul>';
+                } else if (typeof value === 'object' && value !== null) {
+                    displayVal = JSON.stringify(value);
+                } else if (key === 'calculated_at') {
+                    displayVal = new Date(value).toLocaleString('ru-RU');
+                }
+                
+                html += `<tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:8px; font-weight:600; color:#555; vertical-align:top; width: 45%;">${displayKey}</td>
+                            <td style="padding:8px; text-align:right; vertical-align:top; word-break:break-word;">${displayVal}</td>
+                         </tr>`;
+            }
+            html += '</table>';
+
+            document.getElementById('audit-content').innerHTML = html;
+            document.getElementById('audit-dialog').showModal();
+        } catch (e) {
+            console.error(e);
+            alert("Ошибка чтения данных расшифровки.");
+        }
+    }
+
+    function openFastPayModal(tenantId, tenantName, amount) {
+        document.getElementById('fast-pay-tenant-id').value = tenantId;
+        document.getElementById('fast-pay-tenant-name').textContent = tenantName;
+        document.getElementById('fast-pay-amount').value = amount > 0 ? parseFloat(amount).toFixed(2) : '0.00';
+        
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        document.getElementById('fast-pay-date').value = dateStr;
+        
+        document.getElementById('fast-pay-dialog').showModal();
+    }
+</script>
+{% endblock %}
